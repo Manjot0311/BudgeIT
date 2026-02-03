@@ -134,84 +134,79 @@ class BudgeITApp {
   }
 
   /* ===================== BUDGET ===================== */
-  showCategoryPicker() {
-    const categories = storage.getCategories();
-    if (!categories.length) {
-      this.showAlert('Errore', 'Crea prima una categoria');
-      return;
-    }
-
-    // Crea overlay
-    const overlay = document.createElement('div');
-    overlay.className = 'ios-picker-overlay';
-    overlay.innerHTML = `
-      <div class="ios-picker-modal">
-        <div class="ios-picker-header">
-          <button class="ios-picker-cancel">Annulla</button>
-          <div  class="ios-picker-title">Seleziona categoria</div>
-          <button class="ios-picker-done">Fine</button>
-        </div>
-        <div class="ios-picker-list">
-          ${categories.map(cat => {
-            const icon     = this.getCategoryIcon(cat);
-            const escaped  = this.escapeHtml(cat);
-            return `
-              <div class="ios-picker-item" data-value="${escaped}">
-                <span class="ios-picker-item-icon">${icon}</span>
-                <span class="ios-picker-item-name">${escaped}</span>
-                <span class="ios-picker-item-check">&#x2713;</span>
-              </div>`;
-          }).join('')}
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    // ── event listeners ──────────────────────────────
-    const closeOverlay = () => overlay.remove();
-
-    overlay.querySelector('.ios-picker-cancel')
-      .addEventListener('click', closeOverlay);
-
-    overlay.querySelector('.ios-picker-done')
-      .addEventListener('click', () => {
-        const selected = overlay.querySelector('.ios-picker-item.selected');
-        if (selected) {
-          const categoryName = selected.dataset.value;
-          const displayEl    = document.getElementById('selected-category-display');
-          if (displayEl) {
-            displayEl.textContent  = categoryName;
-            displayEl.dataset.value = categoryName;
-          }
-        }
-        closeOverlay();
-      });
-
-    // Click su item → seleziona + chiudi dopo flash
-    overlay.querySelectorAll('.ios-picker-item').forEach(item => {
-      item.addEventListener('click', () => {
-        overlay.querySelectorAll('.ios-picker-item')
-          .forEach(el => el.classList.remove('selected'));
-        item.classList.add('selected');
-
-        const categoryName = item.dataset.value;
-        const displayEl    = document.getElementById('selected-category-display');
-        if (displayEl) {
-          displayEl.textContent  = categoryName;
-          displayEl.dataset.value = categoryName;
-        }
-        setTimeout(() => closeOverlay(), 200);
-      });
-    });
-
-    // Click sul fondo grigio → chiudi
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) closeOverlay();
-    });
-
-    // Anima entrata
-    setTimeout(() => overlay.classList.add('active'), 10);
+showCategoryPicker() {
+  const categories = storage.getCategories();
+  if (!categories.length) {
+    this.showAlert('Errore', 'Crea prima una categoria');
+    return;
   }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'ios-picker-overlay';
+  overlay.innerHTML = `
+    <div class="ios-picker-modal">
+      <div class="ios-picker-header">
+        <button class="ios-picker-cancel">Annulla</button>
+        <div class="ios-picker-title">Seleziona categoria</div>
+        <button class="ios-picker-done">Fine</button>
+      </div>
+      <div class="ios-picker-list">
+        ${categories.map(cat => {
+          const name  = this.escapeHtml(cat.name ?? cat);
+          const emoji = cat.emoji ?? this.getCategoryIcon(name);
+          return `
+            <div class="ios-picker-item" data-value="${name}">
+              <span class="ios-picker-item-icon">${emoji}</span>
+              <span class="ios-picker-item-name">${name}</span>
+              <span class="ios-picker-item-check">&#x2713;</span>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const closeOverlay = () => overlay.remove();
+
+  overlay.querySelector('.ios-picker-cancel')
+    .addEventListener('click', closeOverlay);
+
+  overlay.querySelector('.ios-picker-done')
+    .addEventListener('click', () => {
+      const selected = overlay.querySelector('.ios-picker-item.selected');
+      if (selected) {
+        const value = selected.dataset.value;
+        const displayEl = document.getElementById('selected-category-display');
+        if (displayEl) {
+          displayEl.textContent = value;
+          displayEl.dataset.value = value;
+        }
+      }
+      closeOverlay();
+    });
+
+  overlay.querySelectorAll('.ios-picker-item').forEach(item => {
+    item.addEventListener('click', () => {
+      overlay.querySelectorAll('.ios-picker-item')
+        .forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
+
+      const value = item.dataset.value;
+      const displayEl = document.getElementById('selected-category-display');
+      if (displayEl) {
+        displayEl.textContent = value;
+        displayEl.dataset.value = value;
+      }
+      setTimeout(closeOverlay, 180);
+    });
+  });
+
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) closeOverlay();
+  });
+
+  setTimeout(() => overlay.classList.add('active'), 10);
+}
 
   // Mappa categoria → emoji (stringa JS, non HTML)
   getCategoryIcon(cat) {
