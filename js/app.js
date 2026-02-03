@@ -1,13 +1,11 @@
 import storage from './storage.js';
 import appState from './state.js';
 import router from './router.js';
-
 import homeView from './views/home.js';
 import expensesView from './views/expenses.js';
 import budgetView from './views/budget.js';
 import statsView from './views/stats.js';
 import onboardingView from './views/onboarding.js';
-
 import settingsModal from './ui/settings-modal.js';
 import alertModal from './ui/alert-modal.js';
 import toast from './ui/toast.js';
@@ -18,18 +16,15 @@ class BudgeITApp {
   }
 
   /* ===================== INIT ===================== */
-
   async init() {
-    router.register('home', homeView);
-    router.register('expenses', expensesView);
-    router.register('budget', budgetView);
-    router.register('stats', statsView);
+    router.register('home',       homeView);
+    router.register('expenses',   expensesView);
+    router.register('budget',     budgetView);
+    router.register('stats',      statsView);
     router.register('onboarding', onboardingView);
 
     const profiles = storage.getProfiles();
-    await router.navigate('onboarding', {
-      mode: profiles.length ? 'login' : 'first'
-    });
+    await router.navigate('onboarding', { mode: profiles.length ? 'login' : 'first' });
 
     const theme = storage.getSetting('theme') || 'auto';
     this.applyTheme(theme);
@@ -49,15 +44,10 @@ class BudgeITApp {
   }
 
   /* ===================== THEME ===================== */
-
   applyTheme(theme) {
-    const actual =
-      theme === 'auto'
-        ? window.matchMedia('(prefers-color-scheme: dark)').matches
-          ? 'dark'
-          : 'light'
-        : theme;
-
+    const actual = theme === 'auto'
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      : theme;
     document.documentElement.dataset.theme = actual;
     storage.setSetting('theme', theme);
   }
@@ -68,7 +58,6 @@ class BudgeITApp {
   }
 
   /* ===================== PROFILI ===================== */
-
   createProfileUI() {
     this.UI.alertModal.showInput(
       'Nuovo profilo',
@@ -76,9 +65,7 @@ class BudgeITApp {
       'text',
       (name) => {
         const clean = name?.trim();
-        if (!clean) {
-          return this.showAlert('Errore', 'Nome profilo mancante');
-        }
+        if (!clean) { return this.showAlert('Errore', 'Nome profilo mancante'); }
         this.createProfile(clean);
       }
     );
@@ -105,20 +92,16 @@ class BudgeITApp {
       this.showAlert('Errore', 'PIN non valido');
       return;
     }
-
     appState.reset();
     storage.setActiveProfile(profileId);
     appState.notify('profile-changed', { profileId });
-
     this.enterApp();
   }
 
   createProfile(name, pin = null) {
     const id = storage.createProfile(name, pin);
-
     appState.reset();
     appState.notify('profile-changed', { profileId: id });
-
     this.enterApp();
     this.showToast('Profilo creato');
   }
@@ -141,13 +124,8 @@ class BudgeITApp {
       (name) => {
         const clean = name?.trim();
         if (!clean) return;
-
         storage.renameProfile(profile.id, clean);
-        appState.notify('profile-renamed', {
-          profileId: profile.id,
-          name: clean
-        });
-
+        appState.notify('profile-renamed', { profileId: profile.id, name: clean });
         this.UI.settingsModal.open();
         this.showToast('Profilo rinominato');
       },
@@ -156,7 +134,6 @@ class BudgeITApp {
   }
 
   /* ===================== BUDGET ===================== */
-
   showCategoryPicker() {
     const categories = storage.getCategories();
     if (!categories.length) {
@@ -171,88 +148,89 @@ class BudgeITApp {
       <div class="ios-picker-modal">
         <div class="ios-picker-header">
           <button class="ios-picker-cancel">Annulla</button>
-          <div class="ios-picker-title">Seleziona categoria</div>
+          <div  class="ios-picker-title">Seleziona categoria</div>
           <button class="ios-picker-done">Fine</button>
         </div>
         <div class="ios-picker-list">
           ${categories.map(cat => {
-            const icon = this.getCategoryIcon(cat);
-            const escaped = this.escapeHtml(cat);
+            const icon     = this.getCategoryIcon(cat);
+            const escaped  = this.escapeHtml(cat);
             return `
               <div class="ios-picker-item" data-value="${escaped}">
                 <span class="ios-picker-item-icon">${icon}</span>
                 <span class="ios-picker-item-name">${escaped}</span>
-                <span class="ios-picker-item-check">✓</span>
-              </div>
-            `;
+                <span class="ios-picker-item-check">&#x2713;</span>
+              </div>`;
           }).join('')}
         </div>
       </div>
     `;
-    
     document.body.appendChild(overlay);
-    
-    // Event listeners
+
+    // ── event listeners ──────────────────────────────
     const closeOverlay = () => overlay.remove();
-    
-    overlay.querySelector('.ios-picker-cancel').addEventListener('click', closeOverlay);
-    overlay.querySelector('.ios-picker-done').addEventListener('click', () => {
-      const selected = overlay.querySelector('.ios-picker-item.selected');
-      if (selected) {
-        const categoryName = selected.dataset.value;
-        const displayEl = document.getElementById('selected-category-display');
-        if (displayEl) {
-          displayEl.textContent = categoryName;
-          displayEl.dataset.value = categoryName;
+
+    overlay.querySelector('.ios-picker-cancel')
+      .addEventListener('click', closeOverlay);
+
+    overlay.querySelector('.ios-picker-done')
+      .addEventListener('click', () => {
+        const selected = overlay.querySelector('.ios-picker-item.selected');
+        if (selected) {
+          const categoryName = selected.dataset.value;
+          const displayEl    = document.getElementById('selected-category-display');
+          if (displayEl) {
+            displayEl.textContent  = categoryName;
+            displayEl.dataset.value = categoryName;
+          }
         }
-      }
-      closeOverlay();
-    });
-    
-    // Click su item per selezionare E chiudere automaticamente
+        closeOverlay();
+      });
+
+    // Click su item → seleziona + chiudi dopo flash
     overlay.querySelectorAll('.ios-picker-item').forEach(item => {
       item.addEventListener('click', () => {
-        overlay.querySelectorAll('.ios-picker-item').forEach(el => el.classList.remove('selected'));
+        overlay.querySelectorAll('.ios-picker-item')
+          .forEach(el => el.classList.remove('selected'));
         item.classList.add('selected');
-        
-        // Aggiorna il display e chiudi dopo un breve delay per mostrare la selezione
+
         const categoryName = item.dataset.value;
-        const displayEl = document.getElementById('selected-category-display');
+        const displayEl    = document.getElementById('selected-category-display');
         if (displayEl) {
-          displayEl.textContent = categoryName;
+          displayEl.textContent  = categoryName;
           displayEl.dataset.value = categoryName;
         }
-        
         setTimeout(() => closeOverlay(), 200);
       });
     });
-    
-    // Click su overlay per chiudere
+
+    // Click sul fondo grigio → chiudi
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) closeOverlay();
     });
-    
+
     // Anima entrata
     setTimeout(() => overlay.classList.add('active'), 10);
   }
 
+  // Mappa categoria → emoji (stringa JS, non HTML)
   getCategoryIcon(cat) {
     const map = {
-      Alimentari: '🛒',
-      Trasporti: '🚗',
-      Casa: '🏠',
-      Svago: '🎮',
-      Salute: '💊',
-      Altro: '📦'
+      Alimentari: '\uD83D\uDED2',   // 🛒
+      Trasporti:  '\uD83D\uDE97',   // 🚗
+      Casa:       '\uD83C\uDFE0',   // 🏠
+      Svago:      '\uD83C\uDFAE',   // 🎮
+      Salute:     '\uD83D\uDC8A',   // 💊
+      Altro:      '\uD83D\uDCE6'    // 📦
     };
-    return map[cat] || '📦';
+    return map[cat] || '\uD83D\uDCE6'; // default 📦
   }
 
   setBudgetUI() {
     const categoryDisplay = document.getElementById('selected-category-display');
     const category = categoryDisplay ? categoryDisplay.dataset.value : null;
-    const amount = parseFloat(document.getElementById('budget-amount').value);
-    
+    const amount   = parseFloat(document.getElementById('budget-amount').value);
+
     if (!category) {
       this.showAlert('Errore', 'Seleziona una categoria');
       return;
@@ -261,14 +239,14 @@ class BudgeITApp {
       this.showAlert('Errore', 'Inserisci un importo valido');
       return;
     }
-    
+
     storage.setBudget(category, amount);
-    
+
     // Reset form
-    categoryDisplay.textContent = 'Seleziona categoria';
+    categoryDisplay.textContent  = 'Seleziona categoria';
     categoryDisplay.dataset.value = '';
     document.getElementById('budget-amount').value = '';
-    
+
     budgetView.render();
     this.showToast('Budget impostato');
   }
@@ -284,10 +262,8 @@ class BudgeITApp {
       (value) => {
         const amount = parseFloat(value);
         if (isNaN(amount) || amount <= 0) return;
-
         storage.setBudget(category, amount);
         appState.notify('budget-updated', { category, amount });
-
         router.routes.budget?.renderBudgetList();
         this.showToast('Budget aggiornato');
       },
@@ -296,64 +272,51 @@ class BudgeITApp {
   }
 
   /* ===================== CATEGORIE ===================== */
-
   toggleCategoryForm() {
     const form = document.getElementById('category-form');
     const icon = document.getElementById('category-toggle-icon');
-    
     if (!form || !icon) return;
-    
+
     if (form.style.display === 'none') {
       form.style.display = 'flex';
-      icon.textContent = '−';
-      // Focus sull'input
+      icon.textContent   = '&#x2212;'; // −
       const input = document.getElementById('new-category');
       if (input) input.focus();
     } else {
       form.style.display = 'none';
-      icon.textContent = '+';
-      // Clear input
+      icon.textContent   = '+';
       const input = document.getElementById('new-category');
       if (input) input.value = '';
     }
   }
 
   addCategoryUI() {
-    const nameInput = document.getElementById('new-category');
+    const nameInput  = document.getElementById('new-category');
     const emojiInput = document.getElementById('new-category-emoji');
-    
-    const name = nameInput?.value?.trim();
-    const emoji = emojiInput?.value?.trim() || '📦';
-    
+    const name       = nameInput?.value?.trim();
+    const emoji      = emojiInput?.value?.trim() || '\uD83D\uDCE6'; // 📦
+
     if (!name) {
       this.UI.toast.show('Inserisci un nome', 'error');
       return;
     }
-    
-    // Validazione emoji (opzionale ma consigliata)
     if (!emoji) {
       this.UI.toast.show('Inserisci un\'emoji', 'error');
       return;
     }
-    
-    // Aggiungi categoria con emoji
-    // (usa la logica esistente, aggiungendo solo l'emoji)
+
     const categories = storage.getCategories();
     if (categories.includes(name)) {
       this.UI.toast.show('Categoria già esistente', 'error');
       return;
     }
-    
-    // IMPORTANTE: Salvare l'emoji insieme alla categoria
-    // nella struttura dati esistente (es. come oggetto)
-    // Esempio: {name: 'Alimentari', emoji: '🛒'}
-    
-    storage.addCategory({name, emoji}); // Adatta alla tua struttura
-    
+
+    storage.addCategory({ name, emoji });
+
     // Reset inputs
-    nameInput.value = '';
+    nameInput.value  = '';
     emojiInput.value = '';
-    
+
     // Refresh view
     this.currentView?.populateCategories?.();
     this.UI.toast.show('Categoria aggiunta', 'success');
@@ -361,51 +324,43 @@ class BudgeITApp {
 
   removeCategoryUI(name) {
     this.UI.alertModal.showConfirm({
-      title: 'Elimina categoria',
-      message: 'Le spese verranno spostate in "Altro". Continuare?',
+      title:       'Elimina categoria',
+      message:     'Le spese verranno spostate in "Altro". Continuare?',
       confirmText: 'Elimina',
-      cancelText: 'Annulla',
-      onConfirm: () => {
+      cancelText:  'Annulla',
+      onConfirm:   () => {
         const active = storage.getActiveProfile();
         if (!active) return;
 
         storage.removeCategory(name);
-
         appState.notify('categories-changed', { profileId: active.id });
 
         router.routes.budget?.populateCategories?.();
         router.routes.budget?.renderBudgetList?.();
         router.routes.expenses?.populateCategories?.();
         router.routes.expenses?.renderExpenseList?.();
-
         this.showToast('Categoria eliminata');
       }
     });
   }
 
   /* ===================== EXPENSES ===================== */
-
   saveExpenseUI() {
-    const nameEl = document.getElementById('expense-name');
-    const amountEl = document.getElementById('expense-amount');
+    const nameEl     = document.getElementById('expense-name');
+    const amountEl   = document.getElementById('expense-amount');
     const categoryEl = document.getElementById('expense-category');
-    const dateEl = document.getElementById('expense-date');
-    const notesEl = document.getElementById('expense-notes');
+    const dateEl     = document.getElementById('expense-date');
+    const notesEl    = document.getElementById('expense-notes');
 
-    const name = nameEl?.value?.trim();
-    const amount = parseFloat(amountEl?.value);
+    const name     = nameEl?.value?.trim();
+    const amount   = parseFloat(amountEl?.value);
     const category = categoryEl?.value || 'Altro';
-
-    const today = new Date().toISOString().slice(0, 10);
-    const dateInput = dateEl?.value;
-    const date = dateInput || today;
+    const today    = new Date().toISOString().slice(0, 10);
+    const date     = dateEl?.value || today;
 
     // ❌ BLOCCO SPESE FUTURE
     if (date > today) {
-      return this.showAlert(
-        'Data non valida',
-        'Non puoi registrare spese future'
-      );
+      return this.showAlert('Data non valida', 'Non puoi registrare spese future');
     }
 
     const notes = notesEl?.value?.trim();
@@ -413,39 +368,31 @@ class BudgeITApp {
     if (!name) {
       return this.showAlert('Errore', 'Nome spesa mancante');
     }
-
     if (isNaN(amount) || amount <= 0) {
       return this.showAlert('Errore', 'Importo non valido');
     }
 
-    storage.addExpense({
-      name,
-      amount,
-      category,
-      date,
-      notes
-    });
+    storage.addExpense({ name, amount, category, date, notes });
 
     // Reset campi
-    if (nameEl) nameEl.value = '';
-    if (amountEl) amountEl.value = '';
+    if (nameEl)     nameEl.value     = '';
+    if (amountEl)   amountEl.value   = '';
     if (categoryEl) categoryEl.value = '';
-    if (dateEl) dateEl.value = today;
-    if (notesEl) notesEl.value = '';
+    if (dateEl)     dateEl.value     = today;
+    if (notesEl)    notesEl.value    = '';
 
     router.routes.expenses?.renderExpenseList?.();
     router.routes.home?.updateStats?.();
-
     this.showToast('Spesa salvata');
   }
 
   deleteExpenseUI(id) {
     this.UI.alertModal.showConfirm({
-      title: 'Elimina spesa',
-      message: 'Sei sicuro?',
+      title:       'Elimina spesa',
+      message:     'Sei sicuro?',
       confirmText: 'Elimina',
-      cancelText: 'Annulla',
-      onConfirm: () => {
+      cancelText:  'Annulla',
+      onConfirm:   () => {
         storage.deleteExpense(id);
         router.routes.expenses?.renderExpenseList?.();
         router.routes.home?.updateStats?.();
@@ -455,19 +402,14 @@ class BudgeITApp {
   }
 
   /* ===================== STATS ===================== */
-
   changeStatsMonth(delta) {
     const stats = router.routes.stats;
     if (!stats) return;
-
-    stats.currentMonth.setMonth(
-      stats.currentMonth.getMonth() + delta
-    );
+    stats.currentMonth.setMonth(stats.currentMonth.getMonth() + delta);
     stats.update();
   }
 
   /* ===================== UTIL ===================== */
-
   switchView(name, params = {}) {
     router.navigate(name, params);
   }
@@ -487,16 +429,15 @@ class BudgeITApp {
 
   escapeHtml(str) {
     return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+      .replace(/&/g,  '&amp;')
+      .replace(/</g,  '&lt;')
+      .replace(/>/g,  '&gt;')
+      .replace(/"/g,  '&quot;')
+      .replace(/'/g,  '&#39;');
   }
 }
 
 /* ===================== BOOT ===================== */
-
 const app = new BudgeITApp();
 window.App = app;
 

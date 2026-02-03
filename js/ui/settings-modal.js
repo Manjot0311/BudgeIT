@@ -2,7 +2,7 @@ import storage from '../storage.js';
 import app from '../app.js';
 
 const settingsModal = {
-  isOpen: false,
+  isOpen:      false,
   initialized: false,
 
   open() {
@@ -35,7 +35,7 @@ const settingsModal = {
 
     if (!modal) {
       modal = document.createElement('div');
-      modal.id = 'settings-modal';
+      modal.id        = 'settings-modal';
       modal.className = 'modal';
       modal.innerHTML = `
         <div class="modal-content">
@@ -46,82 +46,85 @@ const settingsModal = {
     } else {
       this.refresh();
     }
-
     return modal;
   },
 
   getContentHTML() {
-    const profiles = storage.getProfiles();
     const activeProfile = storage.getActiveProfile();
 
     return `
+      <!-- ── header ── -->
       <div class="modal-header">
         <div class="modal-title">Impostazioni</div>
-        <button class="modal-close" onclick="App.UI.settingsModal.close()">âœ•</button>
+        <button class="modal-close" onclick="App.UI.settingsModal.close()">&times;</button>
       </div>
 
+      <!-- ── profilo ── -->
       <div class="settings-section">
         <div class="settings-section-title">Profilo</div>
-
         <div class="settings-group">
           <div class="settings-item">
             <div class="settings-item-label">Profilo attivo</div>
             <div style="font-weight:500">
-              ${app.escapeHtml(activeProfile?.name || 'â€”')}
+              ${app.escapeHtml(activeProfile?.name || '&ndash;')}
             </div>
           </div>
-
           <div class="settings-item settings-btn-row">
             <button class="btn btn-secondary btn-row"
-              onclick="App.renameProfileUI(); App.UI.settingsModal.close();">
+                    onclick="App.renameProfileUI(); App.UI.settingsModal.close();">
               Rinomina profilo
             </button>
             <button class="btn btn-secondary btn-row"
-              onclick="App.switchProfileFromSettings()">
+                    onclick="App.switchProfileFromSettings()">
               Cambia profilo
             </button>
           </div>
         </div>
       </div>
 
+      <!-- ── aspetto ── -->
       <div class="settings-section">
         <div class="settings-section-title">Aspetto</div>
-
         <div class="settings-group">
           <div class="settings-item">
             <div class="settings-item-label">Tema</div>
             <div class="theme-toggle">
               <button class="toggle-btn" data-theme="light"
-                onclick="App.setTheme('light'); App.UI.settingsModal.syncThemeButtons();">Chiaro</button>
+                      onclick="App.setTheme('light'); App.UI.settingsModal.syncThemeButtons();">
+                Chiaro
+              </button>
               <button class="toggle-btn" data-theme="auto"
-                onclick="App.setTheme('auto'); App.UI.settingsModal.syncThemeButtons();">Auto</button>
+                      onclick="App.setTheme('auto');  App.UI.settingsModal.syncThemeButtons();">
+                Auto
+              </button>
               <button class="toggle-btn" data-theme="dark"
-                onclick="App.setTheme('dark'); App.UI.settingsModal.syncThemeButtons();">Scuro</button>
+                      onclick="App.setTheme('dark');  App.UI.settingsModal.syncThemeButtons();">
+                Scuro
+              </button>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- ── dati ── -->
       <div class="settings-section">
         <div class="settings-section-title">Dati</div>
-
         <div class="settings-group">
           <div class="settings-item settings-btn-row">
             <button class="btn btn-secondary btn-row"
-              onclick="App.exportDataUI()">
+                    onclick="App.exportDataUI()">
               Esporta dati
             </button>
             <input type="file" id="import-file" accept=".json"
-              style="display:none"
-              onchange="App.importDataUI(event)">
+                   style="display:none"
+                   onchange="App.importDataUI(event)">
             <button class="btn btn-secondary btn-row"
-              onclick="document.getElementById('import-file').click()">
+                    onclick="document.getElementById('import-file').click()">
               Importa dati
             </button>
           </div>
         </div>
       </div>
-
     `;
   },
 
@@ -129,6 +132,7 @@ const settingsModal = {
     const modal = document.getElementById('settings-modal');
     if (!modal) return;
 
+    // chiudi cliccando il fondo
     modal.addEventListener('click', (e) => {
       if (e.target === modal) this.close();
     });
@@ -137,15 +141,13 @@ const settingsModal = {
   },
 
   syncThemeButtons() {
-    // Prendi il tema salvato (profilo) o fallback al dataset attuale
     const themeFromStorage = storage.getSetting('theme');
-    const currentTheme = themeFromStorage || document.documentElement.dataset.theme || 'auto';
+    const currentTheme     = themeFromStorage
+      || document.documentElement.dataset.theme
+      || 'auto';
 
     document.querySelectorAll('.toggle-btn').forEach(btn => {
-      btn.classList.toggle(
-        'active',
-        btn.dataset.theme === currentTheme
-      );
+      btn.classList.toggle('active', btn.dataset.theme === currentTheme);
     });
   }
 };
