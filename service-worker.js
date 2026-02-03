@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'budgetit-v2.1'; // ⬅️ CAMBIA SOLO QUI LA VERSIONE
+const CACHE_VERSION = 'budgeit-v0.1.0';
 const CACHE_NAME = CACHE_VERSION;
 
 const CACHE_URLS = [
