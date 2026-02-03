@@ -104,17 +104,24 @@ const budgetView = {
       return;
     }
 
-    list.innerHTML = categories.map(name => `
-      <div class="budget-category-item">
-        <div class="budget-category-item-content">
-          <span class="budget-category-item-icon">${name.split(' ')[0]}</span>
-          <span class="budget-category-item-name">${escapeHTML(name)}</span>
-        </div>
-        <button class="budget-category-item-remove"
-          onclick="App.removeCategoryUI('${escapeHTML(name)}')">×</button>
+    list.innerHTML = categories.map(name => {
+  const parts = name.split(' ');
+  const emoji = parts[0];
+  const label = parts.slice(1).join(' ');
+
+  return `
+    <div class="budget-category-item">
+      <div class="budget-category-item-content">
+        <span class="budget-category-item-icon">${emoji}</span>
+        <span class="budget-category-item-name">${escapeHTML(label)}</span>
       </div>
-    `).join('');
-  },
+      <button
+        class="budget-category-item-remove"
+        onclick="App.removeCategoryUI('${escapeHTML(name)}')"
+      >×</button>
+    </div>
+  `;
+}).join('');
 
   renderBudgetList() {
     const list = document.getElementById('budget-list');
