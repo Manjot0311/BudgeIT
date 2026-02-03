@@ -31,7 +31,7 @@ const onboardingView = {
       <div class="profile-onboarding">
         <div class="profile-onboarding-content">
           <div class="profile-brand">
-            <img class="profile-brand-icon" src="./icons/icon-192.png" alt="BudgeIT">
+            <img class="profile-brand-icon" src="icons/icon-192.png" alt="BudgeIT">
             <div class="profile-logo">BudgeIT</div>
           </div>
 
@@ -53,7 +53,7 @@ const onboardingView = {
       <div class="profile-onboarding">
         <div class="profile-onboarding-content">
           <div class="profile-brand">
-            <img class="profile-brand-icon" src="./icons/icon-192.png" alt="BudgeIT">
+            <img class="profile-brand-icon" src="icons/icon-192.png" alt="BudgeIT">
             <div class="profile-logo">BudgeIT</div>
           </div>
 
