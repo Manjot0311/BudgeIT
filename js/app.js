@@ -36,7 +36,7 @@ class BudgeITApp {
 
     if ('serviceWorker' in navigator) {
       try {
-        await navigator.serviceWorker.register('/service-worker.js');
+        await navigator.serviceWorker.register('service-worker.js');
         console.log('Service worker registrato');
       } catch (e) {
         console.warn('Service worker registration failed', e);
