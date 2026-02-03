@@ -43,28 +43,28 @@ const expensesView = {
       <div class="header">
         <div class="header-top">
           <div class="header-top-left">
-            <button class="back-button visible" data-action="back">←</button>
+            <button class="back-button visible" data-action="back">â†</button>
             <div class="header-title">BudgeIT</div>
           </div>
-          <button class="header-icon" data-action="settings">☰</button>
+          <button class="header-icon" data-action="settings">â˜°</button>
         </div>
         <div class="header-subtitle">Registra e consulta le spese</div>
       </div>
 
       <div class="tabs visible">
-        <button class="tab active" data-nav="expenses">💳 Spese</button>
-        <button class="tab" data-nav="budget">🎯 Budget</button>
-        <button class="tab" data-nav="stats">📊 Stats</button>
+        <button class="tab active" data-nav="expenses">ðŸ’³ Spese</button>
+        <button class="tab" data-nav="budget">ðŸŽ¯ Budget</button>
+        <button class="tab" data-nav="stats">ðŸ“Š Stats</button>
       </div>
 
-      <div class="content expenses-view">
+      <div class="content">
         <div class="section-title">Nuova spesa</div>
 
         <input id="expense-name" class="input-field" placeholder="Nome spesa">
         <input id="expense-amount" class="input-field" type="number" step="0.01" placeholder="Importo">
         <select id="expense-category" class="select-field"></select>
 
-        <!-- Data: campo allineato con gli altri input -->
+        <!-- Data: visibile ma non invasiva -->
         <input id="expense-date" class="input-field" type="date">
 
         <button class="btn btn-primary btn-full" data-action="save-expense">
@@ -74,18 +74,18 @@ const expensesView = {
         <div class="section-title" style="margin-top:40px;">Le tue spese</div>
 
         <div class="month-selector">
-          <button class="month-btn" data-month="-1">‹</button>
+          <button class="month-btn" data-month="-1">â€¹</button>
           <div id="current-month" class="month-display"></div>
-          <button class="month-btn" data-month="1">›</button>
+          <button class="month-btn" data-month="1">â€º</button>
         </div>
 
         <div class="filters">
           <select id="filter-category" class="select-field"></select>
           <select id="filter-sort" class="select-field">
-            <option value="date-desc">Data ↓</option>
-            <option value="date-asc">Data ↑</option>
-            <option value="amount-desc">Importo ↓</option>
-            <option value="amount-asc">Importo ↑</option>
+            <option value="date-desc">Data â†“</option>
+            <option value="date-asc">Data â†‘</option>
+            <option value="amount-desc">Importo â†“</option>
+            <option value="amount-asc">Importo â†‘</option>
           </select>
           <button class="btn btn-secondary" data-action="apply-filters">Applica</button>
           <button class="btn btn-secondary" data-action="reset-filters">Reset</button>
@@ -111,7 +111,6 @@ const expensesView = {
 
   populateCategories() {
     const categories = storage.getCategories();
-    const categoryEmojis = storage.getCategoryEmojis() || {};
 
     const expSel = document.getElementById('expense-category');
     if (expSel) {
@@ -174,17 +173,15 @@ const expensesView = {
       return;
     }
 
-    const categoryEmojis = storage.getCategoryEmojis() || {};
-
     list.innerHTML = expenses.map(e => `
       <div class="expense-item">
-        <div>${categoryEmojis[e.category] || this.getCategoryIcon(e.category)}</div>
+        <div>${this.getCategoryIcon(e.category)}</div>
         <div class="expense-info">
           <div>${escapeHTML(e.name)}</div>
           <small>${escapeHTML(e.category)}</small>
         </div>
-        <div>€${(Number(e.amount) || 0).toFixed(2)}</div>
-        <button class="expense-delete" data-delete="${e.id}">×</button>
+        <div>â‚¬${(Number(e.amount) || 0).toFixed(2)}</div>
+        <button class="expense-delete" data-delete="${e.id}">Ã—</button>
       </div>
     `).join('');
   },
@@ -243,13 +240,13 @@ const expensesView = {
 
   getCategoryIcon(cat) {
     return {
-      Alimentari: '🛒',
-      Trasporti: '🚗',
-      Casa: '🏠',
-      Svago: '🎮',
-      Salute: '💊',
-      Altro: '📦'
-    }[cat] || '📦';
+      Alimentari: 'ðŸ›’',
+      Trasporti: 'ðŸš—',
+      Casa: 'ðŸ ',
+      Svago: 'ðŸŽ®',
+      Salute: 'ðŸ’Š',
+      Altro: 'ðŸ“¦'
+    }[cat] || 'ðŸ“¦';
   }
 };
 

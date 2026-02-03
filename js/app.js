@@ -319,28 +319,44 @@ class BudgeITApp {
   }
 
   addCategoryUI() {
-    const input = document.getElementById('new-category');
-    if (!input) return;
-
-    const name = input.value.trim();
-    if (!name) return this.showAlert('Errore', 'Nome mancante');
-    if (storage.getCategories().includes(name))
-      return this.showAlert('Errore', 'Categoria esistente');
-
-    storage.addCategory(name);
-
-    router.routes.budget?.populateCategories?.();
-    router.routes.expenses?.populateCategories?.();
-
-    input.value = '';
+    const nameInput = document.getElementById('new-category');
+    const emojiInput = document.getElementById('new-category-emoji');
     
-    // Chiudi form dopo aggiunta
-    const form = document.getElementById('category-form');
-    const icon = document.getElementById('category-toggle-icon');
-    if (form) form.style.display = 'none';
-    if (icon) icon.textContent = '+';
+    const name = nameInput?.value?.trim();
+    const emoji = emojiInput?.value?.trim() || '📦';
     
-    this.showToast('Categoria aggiunta');
+    if (!name) {
+      this.UI.toast.show('Inserisci un nome', 'error');
+      return;
+    }
+    
+    // Validazione emoji (opzionale ma consigliata)
+    if (!emoji) {
+      this.UI.toast.show('Inserisci un\'emoji', 'error');
+      return;
+    }
+    
+    // Aggiungi categoria con emoji
+    // (usa la logica esistente, aggiungendo solo l'emoji)
+    const categories = storage.getCategories();
+    if (categories.includes(name)) {
+      this.UI.toast.show('Categoria già esistente', 'error');
+      return;
+    }
+    
+    // IMPORTANTE: Salvare l'emoji insieme alla categoria
+    // nella struttura dati esistente (es. come oggetto)
+    // Esempio: {name: 'Alimentari', emoji: '🛒'}
+    
+    storage.addCategory({name, emoji}); // Adatta alla tua struttura
+    
+    // Reset inputs
+    nameInput.value = '';
+    emojiInput.value = '';
+    
+    // Refresh view
+    this.currentView?.populateCategories?.();
+    this.UI.toast.show('Categoria aggiunta', 'success');
   }
 
   removeCategoryUI(name) {

@@ -97,17 +97,6 @@ body {
     min-height: 100vh;
 }
 
-/* =====================================================
-   CORREZIONE BUG #2 - PAGINA HOME NON SCORREVOLE
-   ===================================================== */
-.home-view {
-    overflow: hidden !important;
-    height: 100vh;
-    width: 100vw;
-    display: flex;
-    flex-direction: column;
-}
-
 /* HEADER */
 .header {
     background: var(--bg-primary);
@@ -243,14 +232,6 @@ body {
     padding-right: max(24px, env(safe-area-inset-right, 24px));
 }
 
-/* =====================================================
-   CORREZIONE BUG #5 - EXPENSES VIEW SOLO SCROLL VERTICALE
-   ===================================================== */
-.expenses-view .content {
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-}
-
 .section {
     display: none;
 }
@@ -309,28 +290,6 @@ body {
     line-height: 1;
 }
 
-/* =====================================================
-   CORREZIONE BUG #7 - MIGLIORATA VISUALIZZAZIONE STATS
-   ===================================================== */
-.hero-sub-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    /* Aumentato contrasto da opacity ridotta a 0.7 */
-    opacity: 0.7;
-    margin-bottom: 6px;
-    font-weight: 600;
-    color: #FFFFFF;
-}
-
-.hero-sub-value {
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    color: #FFFFFF;
-    opacity: 1;
-}
-
 .hero-card-delta {
     display: inline-flex;
     align-items: center;
@@ -351,6 +310,26 @@ body {
 .hero-card-delta.negative {
     background: rgba(200, 53, 50, 0.15);
     color: #E74C3C;
+}
+
+/* ========================================
+   BUG #7 FIX: HERO SUB LABELS/VALUES
+   Migliora leggibilità delle metriche
+   ======================================== */
+.hero-sub-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+}
+
+.hero-sub-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #FFFFFF;
+    letter-spacing: -0.02em;
 }
 
 /* BUDGET INDICATOR */
@@ -487,31 +466,6 @@ body {
 .input-field:focus,
 .select-field:focus,
 .textarea-field:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-hover);
-}
-
-/* =====================================================
-   CORREZIONE BUG #4 - CAMPO DATA ALLINEATO
-   ===================================================== */
-#expense-date {
-    width: 100%;
-    padding: 14px 16px;
-    background: var(--bg-surface);
-    border: 1px solid var(--bg-divider);
-    border-radius: var(--radius);
-    font-size: 15px;
-    font-family: inherit;
-    color: var(--text-primary);
-    margin-bottom: 12px;
-    transition: all 0.15s ease;
-    /* Assicura allineamento con altri campi */
-    box-sizing: border-box;
-    display: block;
-}
-
-#expense-date:focus {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-hover);
@@ -962,9 +916,6 @@ body {
     flex-shrink: 0;
 }
 
-/* =====================================================
-   CORREZIONE BUG #3 - MODAL IMPOSTAZIONI SENZA GAP
-   ===================================================== */
 /* MODAL */
 .modal {
     position: fixed;
@@ -981,7 +932,7 @@ body {
     -webkit-backdrop-filter: blur(10px);
     opacity: 0;
     transition: opacity 0.2s ease;
-    padding: 20px;
+    padding: 0;
 }
 
 .modal.show {
@@ -989,6 +940,10 @@ body {
     opacity: 1;
 }
 
+/* ========================================
+   BUG #3 FIX: SETTINGS MODAL
+   Elimina gap dal fondo schermo
+   ======================================== */
 .modal-content {
     background: var(--bg-surface);
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
@@ -998,19 +953,15 @@ body {
     padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    /* CORREZIONE: rimossi margin-bottom e border-radius inferiore */
-    margin-bottom: 0 !important;
-    border-bottom-left-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
-    /* Assicura che arrivi al bordo dello schermo */
+    margin-bottom: 0;
     position: fixed;
     bottom: 0;
-    left: 0;
-    right: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(100%);
 }
 
 .modal.show .modal-content {
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
 }
 
 .modal-header {
@@ -1464,24 +1415,19 @@ body {
 }
 
 /* ============================================================
-   PROFILE ONBOARDING (REGOLE 1-10)
+   BUG #1 FIX: PROFILE ONBOARDING - NO SCROLL VERTICALE
    ============================================================ */
 
-/* =====================================================
-   CORREZIONE BUG #1 - PAGINA ONBOARDING NON SCORREVOLE
-   ===================================================== */
-/* Container principale - centrato verticalmente */
-.profile-onboarding,
-.onboarding-view {
+/* Container principale - centrato verticalmente + NO SCROLL */
+.profile-onboarding {
     min-height: 100vh;
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 40px 24px;
     background: var(--bg-primary);
-    overflow: hidden !important;
-    height: 100vh;
-    width: 100vw;
+    overflow: hidden;
 }
 
 .profile-onboarding-content {
@@ -1758,11 +1704,6 @@ body {
     .content {
         padding-bottom: max(80px, calc(80px + env(safe-area-inset-bottom)));
     }
-    
-    .modal-content {
-        /* Non aggiungere padding per safe area, deve arrivare al bordo */
-        padding-bottom: env(safe-area-inset-bottom);
-    }
 }
 
 @media (max-height: 700px) {
@@ -1790,6 +1731,22 @@ body {
 }
 .modal.show, .alert-modal.show, .calendar-picker.show, #settings-modal.show, #alert-modal.show {
     pointer-events: auto;
+}
+
+/* ========================================
+   BUG #2 FIX: HOME VIEW - NO SCROLL
+   Blocca completamente lo scroll
+   ======================================== */
+
+/* Quando home.js è attiva, identifichiamo tramite presenza di .hero-card senza tabs visible */
+body:has(.hero-card):not(:has(.tabs.visible)) .app-container {
+    height: 100vh;
+    overflow: hidden;
+}
+
+body:has(.hero-card):not(:has(.tabs.visible)) .content {
+    overflow: hidden;
+    height: calc(100vh - 180px);
 }
 
 /* ========================================
@@ -2215,6 +2172,21 @@ body {
     width: 100%;
   }
 }
+
+/* ========================================
+   BUG #5 FIX: EXPENSES VIEW - SOLO SCROLL VERTICALE
+   ======================================== */
+
+/* Quando expenses view è attiva (ha tabs visible + campo expense-name) */
+body:has(#expense-name) .app-container {
+    overflow-x: hidden;
+}
+
+body:has(#expense-name) .content {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
 /* ========================================
    iOS-STYLE CATEGORY PICKER
    ======================================== */
@@ -2387,4 +2359,15 @@ body {
 
 [data-theme="dark"] .ios-picker-modal {
   background: var(--bg-surface);
+}
+
+/* ========================================
+   BUG #6 FIX: INPUT EMOJI PERSONALIZZABILE
+   Aggiunta classe per campo emoji
+   ======================================== */
+.emoji-input {
+  width: 70px;
+  text-align: center;
+  font-size: 24px;
+  padding: 10px;
 }

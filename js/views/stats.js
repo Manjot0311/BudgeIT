@@ -33,7 +33,7 @@ const statsView = {
   currentMonth: new Date(),
   chart: null,
 
-  // ─── RENDER INIZIALE ────────────────────────────────────────────────────
+  // â”€â”€â”€ RENDER INIZIALE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Monta l'HTML una sola volta, poi delega i contenuti a update().
   render() {
     const appEl = document.getElementById('app');
@@ -43,7 +43,7 @@ const statsView = {
     this.update();
   },
 
-  // ─── AGGIORNAMENTO CONTENUTI ────────────────────────────────────────────
+  // â”€â”€â”€ AGGIORNAMENTO CONTENUTI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Chiamato da App.changeStatsMonth() dopo ogni cambio mese.
   // Non tocca l'HTML base, aggiorna solo i valori e il grafico.
   update() {
@@ -66,32 +66,32 @@ const statsView = {
       <div class="header">
         <div class="header-top">
           <div class="header-top-left">
-            <button class="back-button visible" onclick="App.switchView('home')">←</button>
+            <button class="back-button visible" onclick="App.switchView('home')">â†</button>
             <div class="header-title">BudgeIT</div>
           </div>
-          <button class="header-icon" onclick="App.openSettings()">☰</button>
+          <button class="header-icon" onclick="App.openSettings()">â˜°</button>
         </div>
         <div class="header-subtitle">Analizza i tuoi dati</div>
       </div>
 
       <div class="tabs visible">
-        <button class="tab" onclick="App.switchView('expenses')">💳 Spese</button>
-        <button class="tab" onclick="App.switchView('budget')">🎯 Budget</button>
-        <button class="tab active">📊 Stats</button>
+        <button class="tab" onclick="App.switchView('expenses')">ðŸ’³ Spese</button>
+        <button class="tab" onclick="App.switchView('budget')">ðŸŽ¯ Budget</button>
+        <button class="tab active">ðŸ“Š Stats</button>
       </div>
 
       <div class="content">
         <div class="section-title">Statistiche mensili</div>
 
         <div class="month-selector">
-          <button class="month-btn" onclick="App.changeStatsMonth(-1)">‹</button>
+          <button class="month-btn" onclick="App.changeStatsMonth(-1)">â€¹</button>
           <div class="month-display" id="stats-month"></div>
-          <button class="month-btn" onclick="App.changeStatsMonth(1)">›</button>
+          <button class="month-btn" onclick="App.changeStatsMonth(1)">â€º</button>
         </div>
 
         <div class="hero-card">
           <div class="hero-card-label">Totale spese</div>
-          <div class="hero-card-value" id="stats-total">€0.00</div>
+          <div class="hero-card-value" id="stats-total">â‚¬0.00</div>
 
           <div style="display:flex;gap:24px;margin-top:16px;">
             <div>
@@ -100,7 +100,7 @@ const statsView = {
             </div>
             <div>
               <div class="hero-sub-label">MEDIA</div>
-              <div class="hero-sub-value" id="stats-avg">€0.00</div>
+              <div class="hero-sub-value" id="stats-avg">â‚¬0.00</div>
             </div>
           </div>
         </div>
@@ -139,9 +139,9 @@ const statsView = {
     const expenses = this.getMonthExpenses();
     const { total, count, average } = calculateSummary(expenses);
 
-    totalEl.textContent = `€${total.toFixed(2)}`;
+    totalEl.textContent = `â‚¬${total.toFixed(2)}`;
     countEl.textContent = count;
-    avgEl.textContent = `€${average.toFixed(2)}`;
+    avgEl.textContent = `â‚¬${average.toFixed(2)}`;
   },
 
   renderBreakdown() {
@@ -159,7 +159,7 @@ const statsView = {
     if (!expenses.length) {
       container.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">—</div>
+          <div class="empty-state-icon">â€”</div>
           <div class="empty-state-text">Nessun dato disponibile</div>
           <div class="empty-state-sub">Aggiungi spese per visualizzare le statistiche</div>
         </div>
@@ -199,7 +199,7 @@ const statsView = {
                 const value = ctx.parsed || 0;
                 const total = data.reduce((a, b) => a + b, 0);
                 const pct = total ? ((value / total) * 100).toFixed(1) : 0;
-                return `${ctx.label}: €${value.toFixed(2)} (${pct}%)`;
+                return `${ctx.label}: â‚¬${value.toFixed(2)} (${pct}%)`;
               }
             }
           }

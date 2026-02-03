@@ -57,7 +57,7 @@ const settingsModal = {
     return `
       <div class="modal-header">
         <div class="modal-title">Impostazioni</div>
-        <button class="modal-close" onclick="App.UI.settingsModal.close()">✕</button>
+        <button class="modal-close" onclick="App.UI.settingsModal.close()">âœ•</button>
       </div>
 
       <div class="settings-section">
@@ -67,7 +67,7 @@ const settingsModal = {
           <div class="settings-item">
             <div class="settings-item-label">Profilo attivo</div>
             <div style="font-weight:500">
-              ${app.escapeHtml(activeProfile?.name || '—')}
+              ${app.escapeHtml(activeProfile?.name || 'â€”')}
             </div>
           </div>
 
