@@ -290,37 +290,37 @@ class BudgeITApp {
     }
   }
 
-  addCategoryUI() {
-    const nameInput  = document.getElementById('new-category');
-    const emojiInput = document.getElementById('new-category-emoji');
-    const name       = nameInput?.value?.trim();
-    const emoji      = emojiInput?.value?.trim() || '\uD83D\uDCE6'; // 📦
+ addCategoryUI() {
+  const nameInput  = document.getElementById('new-category');
+  const emojiInput = document.getElementById('new-category-emoji');
 
-    if (!name) {
-      this.UI.toast.show('Inserisci un nome', 'error');
-      return;
-    }
-    if (!emoji) {
-      this.UI.toast.show('Inserisci un\'emoji', 'error');
-      return;
-    }
+  const rawName  = nameInput?.value?.trim();
+  const rawEmoji = emojiInput?.value?.trim();
 
-    const categories = storage.getCategories();
-    if (categories.includes(name)) {
-      this.UI.toast.show('Categoria già esistente', 'error');
-      return;
-    }
-
-    storage.addCategory({ name, emoji });
-
-    // Reset inputs
-    nameInput.value  = '';
-    emojiInput.value = '';
-
-    // Refresh view
-    this.currentView?.populateCategories?.();
-    this.UI.toast.show('Categoria aggiunta', 'success');
+  if (!rawName) {
+    this.UI.toast.show('Inserisci un nome categoria', 'error');
+    return;
   }
+
+  const emoji = rawEmoji || '📦';
+  const categoryLabel = `${emoji} ${rawName}`;
+
+  const categories = storage.getCategories();
+  if (categories.includes(categoryLabel)) {
+    this.UI.toast.show('Categoria già esistente', 'error');
+    return;
+  }
+
+  storage.addCategory(categoryLabel);
+
+  nameInput.value  = '';
+  emojiInput.value = '';
+
+  router.routes.budget?.populateCategories?.();
+  router.routes.expenses?.populateCategories?.();
+
+  this.UI.toast.show('Categoria aggiunta', 'success');
+}
 
   removeCategoryUI(name) {
     this.UI.alertModal.showConfirm({
