@@ -1,3 +1,11 @@
+/* ─── layout: il router decide chi scrolla ─── */
+function applyLayout(viewName) {
+  document.body.classList.remove('no-scroll');
+  if (viewName === 'onboarding') {
+    document.body.classList.add('no-scroll');
+  }
+}
+
 const router = {
   routes: {},
   current: null,
@@ -31,6 +39,8 @@ const router = {
 
       this.current = name;
       this.currentView = view;
+
+      applyLayout(name);
 
       await view.render(params);
 

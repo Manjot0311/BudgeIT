@@ -83,7 +83,6 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
     background: var(--bg-primary);
     color: var(--text-primary);
-    min-height: 100vh;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -94,7 +93,6 @@ body {
     max-width: 480px;
     margin: 0 auto;
     background: var(--bg-primary);
-    min-height: 100vh;
 }
 
 /* HEADER */
@@ -1415,13 +1413,12 @@ body {
 }
 
 /* ============================================================
-   BUG #1 FIX: PROFILE ONBOARDING - NO SCROLL VERTICALE
+   PROFILE ONBOARDING - FULLSCREEN, NO SCROLL
+   Il router aggiunge body.no-scroll quando questa view è attiva
    ============================================================ */
 
-/* Container principale - centrato verticalmente + NO SCROLL */
 .profile-onboarding {
-    min-height: 100vh;
-    height: 100vh;
+    height: 100svh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1734,19 +1731,10 @@ body {
 }
 
 /* ========================================
-   BUG #2 FIX: HOME VIEW - NO SCROLL
-   Blocca completamente lo scroll
+   LAYOUT CONTROL — gestito dal router
    ======================================== */
-
-/* Quando home.js è attiva, identifichiamo tramite presenza di .hero-card senza tabs visible */
-body:has(.hero-card):not(:has(.tabs.visible)) .app-container {
-    height: 100vh;
+body.no-scroll {
     overflow: hidden;
-}
-
-body:has(.hero-card):not(:has(.tabs.visible)) .content {
-    overflow: hidden;
-    height: calc(100vh - 180px);
 }
 
 /* ========================================
@@ -2171,20 +2159,6 @@ body:has(.hero-card):not(:has(.tabs.visible)) .content {
   .budget-form-inline .btn {
     width: 100%;
   }
-}
-
-/* ========================================
-   BUG #5 FIX: EXPENSES VIEW - SOLO SCROLL VERTICALE
-   ======================================== */
-
-/* Quando expenses view è attiva (ha tabs visible + campo expense-name) */
-body:has(#expense-name) .app-container {
-    overflow-x: hidden;
-}
-
-body:has(#expense-name) .content {
-    overflow-x: hidden;
-    overflow-y: auto;
 }
 
 /* ========================================
