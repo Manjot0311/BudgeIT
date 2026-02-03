@@ -33,7 +33,7 @@ const statsView = {
   currentMonth: new Date(),
   chart: null,
 
-  // ─── RENDER INIZIALE ────────────────────────────────────────
+  // ─── RENDER INIZIALE ────────────────────────────────────────────────────
   // Monta l'HTML una sola volta, poi delega i contenuti a update().
   render() {
     const appEl = document.getElementById('app');
@@ -43,7 +43,7 @@ const statsView = {
     this.update();
   },
 
-  // ─── AGGIORNAMENTO CONTENUTI ────────────────────────────────
+  // ─── AGGIORNAMENTO CONTENUTI ────────────────────────────────────────────
   // Chiamato da App.changeStatsMonth() dopo ogni cambio mese.
   // Non tocca l'HTML base, aggiorna solo i valori e il grafico.
   update() {

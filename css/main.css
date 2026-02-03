@@ -97,6 +97,17 @@ body {
     min-height: 100vh;
 }
 
+/* =====================================================
+   CORREZIONE BUG #2 - PAGINA HOME NON SCORREVOLE
+   ===================================================== */
+.home-view {
+    overflow: hidden !important;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+}
+
 /* HEADER */
 .header {
     background: var(--bg-primary);
@@ -232,6 +243,14 @@ body {
     padding-right: max(24px, env(safe-area-inset-right, 24px));
 }
 
+/* =====================================================
+   CORREZIONE BUG #5 - EXPENSES VIEW SOLO SCROLL VERTICALE
+   ===================================================== */
+.expenses-view .content {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
 .section {
     display: none;
 }
@@ -288,6 +307,28 @@ body {
     color: #FFFFFF;
     margin-bottom: 20px;
     line-height: 1;
+}
+
+/* =====================================================
+   CORREZIONE BUG #7 - MIGLIORATA VISUALIZZAZIONE STATS
+   ===================================================== */
+.hero-sub-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    /* Aumentato contrasto da opacity ridotta a 0.7 */
+    opacity: 0.7;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+.hero-sub-value {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #FFFFFF;
+    opacity: 1;
 }
 
 .hero-card-delta {
@@ -446,6 +487,31 @@ body {
 .input-field:focus,
 .select-field:focus,
 .textarea-field:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-hover);
+}
+
+/* =====================================================
+   CORREZIONE BUG #4 - CAMPO DATA ALLINEATO
+   ===================================================== */
+#expense-date {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--bg-divider);
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    transition: all 0.15s ease;
+    /* Assicura allineamento con altri campi */
+    box-sizing: border-box;
+    display: block;
+}
+
+#expense-date:focus {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-hover);
@@ -896,6 +962,9 @@ body {
     flex-shrink: 0;
 }
 
+/* =====================================================
+   CORREZIONE BUG #3 - MODAL IMPOSTAZIONI SENZA GAP
+   ===================================================== */
 /* MODAL */
 .modal {
     position: fixed;
@@ -929,6 +998,15 @@ body {
     padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* CORREZIONE: rimossi margin-bottom e border-radius inferiore */
+    margin-bottom: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    /* Assicura che arrivi al bordo dello schermo */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
 }
 
 .modal.show .modal-content {
@@ -1389,14 +1467,21 @@ body {
    PROFILE ONBOARDING (REGOLE 1-10)
    ============================================================ */
 
+/* =====================================================
+   CORREZIONE BUG #1 - PAGINA ONBOARDING NON SCORREVOLE
+   ===================================================== */
 /* Container principale - centrato verticalmente */
-.profile-onboarding {
+.profile-onboarding,
+.onboarding-view {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 40px 24px;
     background: var(--bg-primary);
+    overflow: hidden !important;
+    height: 100vh;
+    width: 100vw;
 }
 
 .profile-onboarding-content {
@@ -1672,6 +1757,11 @@ body {
 @supports (padding: env(safe-area-inset-bottom)) {
     .content {
         padding-bottom: max(80px, calc(80px + env(safe-area-inset-bottom)));
+    }
+    
+    .modal-content {
+        /* Non aggiungere padding per safe area, deve arrivare al bordo */
+        padding-bottom: env(safe-area-inset-bottom);
     }
 }
 

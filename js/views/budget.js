@@ -73,6 +73,8 @@ const budgetView = {
           <!-- Form add categoria: nascosto di default -->
           <div class="budget-category-form" id="category-form" style="display:none;">
             <input type="text" class="input-field input-field--inline" id="new-category" placeholder="Nome categoria">
+            <!-- CORREZIONE BUG #6: Campo per emoji -->
+            <input type="text" class="input-field input-field--inline" id="new-category-emoji" placeholder="Emoji" maxlength="2" style="max-width: 80px; text-align: center; font-size: 24px;">
             <button class="btn btn-secondary btn-sm" onclick="App.addCategoryUI()">Aggiungi</button>
           </div>
 
@@ -110,6 +112,7 @@ const budgetView = {
 
   populateCategories() {
     const categories = storage.getCategories();
+    const categoryEmojis = storage.getCategoryEmojis() || {};
 
     // Popola lista categorie (non pills)
     const list = document.getElementById('category-list');
@@ -126,7 +129,7 @@ const budgetView = {
       list.innerHTML = categories.map(cat => `
         <div class="budget-category-item">
           <div class="budget-category-item-content">
-            <span class="budget-category-item-icon">${this.getCategoryIcon(cat)}</span>
+            <span class="budget-category-item-icon">${categoryEmojis[cat] || this.getCategoryIcon(cat)}</span>
             <span class="budget-category-item-name">${escapeHTML(cat)}</span>
           </div>
           <button class="budget-category-item-remove" onclick="App.removeCategoryUI('${escapeHTML(cat)}')">
@@ -140,6 +143,8 @@ const budgetView = {
   // iOS-style category picker
   showCategoryPicker() {
     const categories = storage.getCategories();
+    const categoryEmojis = storage.getCategoryEmojis() || {};
+    
     if (!categories.length) {
       alert('Crea prima una categoria');
       return;
@@ -158,7 +163,7 @@ const budgetView = {
         <div class="ios-picker-list">
           ${categories.map(cat => `
             <div class="ios-picker-item" data-value="${escapeHTML(cat)}">
-              <span class="ios-picker-item-icon">${this.getCategoryIcon(cat)}</span>
+              <span class="ios-picker-item-icon">${categoryEmojis[cat] || this.getCategoryIcon(cat)}</span>
               <span class="ios-picker-item-name">${escapeHTML(cat)}</span>
               <span class="ios-picker-item-check">✓</span>
             </div>
@@ -208,6 +213,7 @@ const budgetView = {
     const budgets = storage.getBudgets();
     const expenses = this.getCurrentMonthExpenses();
     const validCategories = storage.getCategories();
+    const categoryEmojis = storage.getCategoryEmojis() || {};
 
     const categories = Object.keys(budgets).filter(cat => validCategories.includes(cat));
 
@@ -237,7 +243,7 @@ const budgetView = {
         <div class="budget-card-clean" onclick="App.editBudgetUI('${escapeHTML(cat)}')">
           <div class="budget-card-header">
             <div class="budget-card-info">
-              <span class="budget-card-icon">${this.getCategoryIcon(cat)}</span>
+              <span class="budget-card-icon">${categoryEmojis[cat] || this.getCategoryIcon(cat)}</span>
               <span class="budget-card-name">${escapeHTML(cat)}</span>
             </div>
             <div class="budget-card-limit">€${(budget || 0).toFixed(0)}</div>

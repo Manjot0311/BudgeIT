@@ -57,14 +57,14 @@ const expensesView = {
         <button class="tab" data-nav="stats">📊 Stats</button>
       </div>
 
-      <div class="content">
+      <div class="content expenses-view">
         <div class="section-title">Nuova spesa</div>
 
         <input id="expense-name" class="input-field" placeholder="Nome spesa">
         <input id="expense-amount" class="input-field" type="number" step="0.01" placeholder="Importo">
         <select id="expense-category" class="select-field"></select>
 
-        <!-- Data: visibile ma non invasiva -->
+        <!-- Data: campo allineato con gli altri input -->
         <input id="expense-date" class="input-field" type="date">
 
         <button class="btn btn-primary btn-full" data-action="save-expense">
@@ -111,6 +111,7 @@ const expensesView = {
 
   populateCategories() {
     const categories = storage.getCategories();
+    const categoryEmojis = storage.getCategoryEmojis() || {};
 
     const expSel = document.getElementById('expense-category');
     if (expSel) {
@@ -173,9 +174,11 @@ const expensesView = {
       return;
     }
 
+    const categoryEmojis = storage.getCategoryEmojis() || {};
+
     list.innerHTML = expenses.map(e => `
       <div class="expense-item">
-        <div>${this.getCategoryIcon(e.category)}</div>
+        <div>${categoryEmojis[e.category] || this.getCategoryIcon(e.category)}</div>
         <div class="expense-info">
           <div>${escapeHTML(e.name)}</div>
           <small>${escapeHTML(e.category)}</small>
