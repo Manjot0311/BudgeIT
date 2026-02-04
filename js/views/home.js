@@ -141,10 +141,16 @@ const homeView = {
     const expenses = this.getCurrentMonthExpenses();
     const total = expenses.reduce((s, e) => s + Number(e.amount || 0), 0);
 
-    document.getElementById('home-total').textContent = `€${total.toFixed(2)}`;
-    document.getElementById('home-count').textContent = expenses.length;
-    document.getElementById('home-avg').textContent =
-      expenses.length ? `€${(total / expenses.length).toFixed(0)}` : '€0';
+    const totalEl = document.getElementById('home-total');
+    const countEl = document.getElementById('home-count');
+    const avgEl = document.getElementById('home-avg');
+
+    // Verifica che gli elementi esistano prima di modificarli
+    if (!totalEl || !countEl || !avgEl) return;
+
+    totalEl.textContent = `€${total.toFixed(2)}`;
+    countEl.textContent = expenses.length;
+    avgEl.textContent = expenses.length ? `€${(total / expenses.length).toFixed(0)}` : '€0';
 
     this.updateDelta();
     this.updateBudgetIndicator();
@@ -157,6 +163,9 @@ const homeView = {
     const el = document.getElementById('home-delta');
     const icon = document.getElementById('delta-icon');
     const text = document.getElementById('delta-text');
+
+    // Verifica che gli elementi esistano prima di modificarli
+    if (!el || !icon || !text) return;
 
     if (!prev) {
       el.className = 'hero-card-delta';
@@ -181,13 +190,20 @@ const homeView = {
     const spent = expenses.reduce((s, e) => s + Number(e.amount || 0), 0);
     const pct = Math.min((spent / totalBudget) * 100, 100);
 
-    document.getElementById('budget-indicator').style.display = 'block';
-    document.getElementById('budget-percentage').textContent = `${pct.toFixed(0)}%`;
-    document.getElementById('budget-spent-total').textContent = `€${spent.toFixed(2)} spesi`;
-    document.getElementById('budget-remaining-total').textContent =
-      `€${Math.max(totalBudget - spent, 0).toFixed(2)} disponibili`;
-
+    const indicatorEl = document.getElementById('budget-indicator');
+    const percentageEl = document.getElementById('budget-percentage');
+    const spentEl = document.getElementById('budget-spent-total');
+    const remainingEl = document.getElementById('budget-remaining-total');
     const fill = document.getElementById('budget-progress-fill');
+
+    // Verifica che gli elementi esistano prima di modificarli
+    if (!indicatorEl || !percentageEl || !spentEl || !remainingEl || !fill) return;
+
+    indicatorEl.style.display = 'block';
+    percentageEl.textContent = `${pct.toFixed(0)}%`;
+    spentEl.textContent = `€${spent.toFixed(2)} spesi`;
+    remainingEl.textContent = `€${Math.max(totalBudget - spent, 0).toFixed(2)} disponibili`;
+
     fill.style.width = `${pct}%`;
     fill.className = 'budget-progress-fill' + (pct >= 100 ? ' danger' : pct >= 80 ? ' warning' : '');
   },
