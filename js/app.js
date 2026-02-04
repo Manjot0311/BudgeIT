@@ -274,7 +274,7 @@ showCategoryPicker() {
 
     if (form.style.display === 'none') {
       form.style.display = 'flex';
-      icon.textContent   = '&#x2212;'; // −
+      icon.textContent   = '-;'; // −
       const input = document.getElementById('new-category');
       if (input) input.focus();
     } else {
