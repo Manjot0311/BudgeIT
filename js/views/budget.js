@@ -122,7 +122,7 @@ const budgetView = {
     </div>
   `;
 }).join('');
-
+}
   renderBudgetList() {
     const list = document.getElementById('budget-list');
     if (!list) return;
