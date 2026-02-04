@@ -118,7 +118,7 @@ const budgetView = {
           <button
             class="budget-category-item-remove"
             onclick="App.removeCategoryUI('${escapeHTML(name)}')"
-          >×</button>
+          >x</button>
         </div>
       `;
     }).join('');
