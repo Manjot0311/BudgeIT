@@ -2345,3 +2345,8 @@ body.no-scroll {
   font-size: 24px;
   padding: 10px;
 }
+
+/* Trasparenza per l'emoji placeholder */
+#new-category-emoji::placeholder {
+  opacity: 0.4;
+}
