@@ -158,7 +158,7 @@ showCategoryPicker() {
             <div class="ios-picker-item" data-value="${name}">
               <span class="ios-picker-item-icon">${emoji}</span>
               <span class="ios-picker-item-name">${name}</span>
-              <span class="ios-picker-item-check">&#x2713;</span>
+              <span class="ios-picker-item-check">✓</span>
             </div>`;
         }).join('')}
       </div>
@@ -274,7 +274,7 @@ showCategoryPicker() {
 
     if (form.style.display === 'none') {
       form.style.display = 'flex';
-      icon.textContent   = '-;'; // −
+      icon.textContent   = '-'; // −
       const input = document.getElementById('new-category');
       if (input) input.focus();
     } else {
