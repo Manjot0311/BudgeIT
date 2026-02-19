@@ -681,6 +681,13 @@ body {
     transform: scale(0.95);
 }
 
+.expense-icon {
+  font-size: 28px;
+  width: 36px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
 /* EMPTY STATE */
 .empty-state {
     text-align: center;

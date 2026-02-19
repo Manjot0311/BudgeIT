@@ -16,6 +16,27 @@ function escapeHTML(text = '') {
   })[m]);
 }
 
+/**
+ * Separa l'emoji dal nome della categoria.
+ * Es: "📦 Spese" → { emoji: "📦", label: "Spese" }
+ * Se non c'è emoji restituisce un fallback.
+ */
+function splitCategory(cat = '') {
+  const emojiRegex = /^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*/u;
+  const match = cat.match(emojiRegex);
+  if (match) {
+    return {
+      emoji: match[0].trim(),
+      label: cat.replace(emojiRegex, '').trim()
+    };
+  }
+  // Categoria senza emoji (es. categorie di default): usa getCategoryIcon di App
+  return {
+    emoji: window.App?.getCategoryIcon(cat) || '🏷️',
+    label: cat
+  };
+}
+
 /* ===================== VIEW ===================== */
 const expensesView = {
   currentMonth:  new Date(),
@@ -185,18 +206,17 @@ const expensesView = {
     }
 
     list.innerHTML = expenses.map(e => {
-      // Usa getCategoryIcon centralizzato di App, con fallback locale
-      const icon = window.App?.getCategoryIcon(e.category) || '🏷️';
+      const { emoji, label } = splitCategory(e.category);
       const formattedDate = toDate(e.date).toLocaleDateString('it-IT', {
         day: '2-digit', month: 'short'
       });
 
       return `
         <div class="expense-item">
-          <div class="expense-icon">${icon}</div>
+          <div class="expense-icon">${emoji}</div>
           <div class="expense-info">
             <div class="expense-name">${escapeHTML(e.name)}</div>
-            <small class="expense-meta">${escapeHTML(e.category)} · ${formattedDate}</small>
+            <small class="expense-meta">${escapeHTML(label)} · ${formattedDate}</small>
           </div>
           <div class="expense-amount">&euro;${(Number(e.amount) || 0).toFixed(2)}</div>
           <button class="expense-delete" data-delete="${e.id}">&times;</button>
