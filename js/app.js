@@ -58,6 +58,13 @@ class BudgeITApp {
   }
 
   /* ===================== PROFILI ===================== */
+
+  /**
+   * Flusso creazione profilo:
+   * 1. Chiede il nome
+   * 2. Chiede se si vuole impostare un PIN (mostra una schermata PIN)
+   * 3. Se sì → chiede conferma PIN
+   */
   createProfileUI() {
     this.UI.alertModal.showInput(
       'Nuovo profilo',
@@ -66,9 +73,159 @@ class BudgeITApp {
       (name) => {
         const clean = name?.trim();
         if (!clean) { return this.showAlert('Errore', 'Nome profilo mancante'); }
-        this.createProfile(clean);
+        // Dopo il nome, chiede il PIN
+        this._askPinForNewProfile(clean);
       }
     );
+  }
+
+  /**
+   * Schermata PIN durante la creazione profilo.
+   * Mostra una modale con tastierino numerico.
+   */
+  _askPinForNewProfile(name) {
+    const overlay = document.createElement('div');
+    overlay.className = 'ios-picker-overlay';
+    overlay.innerHTML = `
+      <div class="ios-picker-modal pin-modal">
+        <div class="ios-picker-header">
+          <button class="ios-picker-cancel" id="pin-skip">Salta</button>
+          <div class="ios-picker-title">Imposta PIN</div>
+          <button class="ios-picker-done" id="pin-confirm" disabled>Conferma</button>
+        </div>
+        <div class="pin-body">
+          <p class="pin-subtitle">Proteggi il profilo con un PIN a 4 cifre</p>
+          <div class="pin-dots" id="pin-dots">
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+          </div>
+          <div class="pin-keypad">
+            ${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k => `
+              <button class="pin-key" data-key="${k}">${k}</button>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.classList.add('active'), 10);
+
+    let pin = '';
+
+    const dots = overlay.querySelectorAll('.pin-dot');
+    const confirmBtn = overlay.querySelector('#pin-confirm');
+
+    const updateDots = () => {
+      dots.forEach((d, i) => d.classList.toggle('filled', i < pin.length));
+      confirmBtn.disabled = pin.length < 4;
+    };
+
+    overlay.querySelectorAll('.pin-key').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        if (key === '⌫') {
+          pin = pin.slice(0, -1);
+        } else if (key !== '' && pin.length < 4) {
+          pin += key;
+        }
+        updateDots();
+      });
+    });
+
+    // Salta → crea senza PIN
+    overlay.querySelector('#pin-skip').addEventListener('click', () => {
+      overlay.remove();
+      this.createProfile(name, null);
+    });
+
+    // Conferma → chiede conferma PIN
+    confirmBtn.addEventListener('click', () => {
+      if (pin.length < 4) return;
+      const firstPin = pin;
+      overlay.remove();
+      this._confirmPin(name, firstPin);
+    });
+  }
+
+  /**
+   * Chiede di reinserire il PIN per conferma.
+   */
+  _confirmPin(name, firstPin) {
+    const overlay = document.createElement('div');
+    overlay.className = 'ios-picker-overlay';
+    overlay.innerHTML = `
+      <div class="ios-picker-modal pin-modal">
+        <div class="ios-picker-header">
+          <button class="ios-picker-cancel" id="pin-back">Indietro</button>
+          <div class="ios-picker-title">Conferma PIN</div>
+          <div style="width:60px"></div>
+        </div>
+        <div class="pin-body">
+          <p class="pin-subtitle" id="pin-msg">Reinserisci il PIN per confermare</p>
+          <div class="pin-dots" id="pin-dots">
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+          </div>
+          <div class="pin-keypad">
+            ${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k => `
+              <button class="pin-key" data-key="${k}">${k}</button>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.classList.add('active'), 10);
+
+    let pin = '';
+    const dots = overlay.querySelectorAll('.pin-dot');
+    const msg  = overlay.querySelector('#pin-msg');
+
+    const updateDots = () => {
+      dots.forEach((d, i) => d.classList.toggle('filled', i < pin.length));
+    };
+
+    const shakeError = () => {
+      const dotsEl = overlay.querySelector('#pin-dots');
+      dotsEl.classList.add('pin-shake');
+      setTimeout(() => dotsEl.classList.remove('pin-shake'), 500);
+      msg.textContent = 'PIN non corrisponde, riprova';
+      msg.style.color = 'var(--color-danger, #FF3B30)';
+      pin = '';
+      updateDots();
+    };
+
+    overlay.querySelectorAll('.pin-key').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        if (key === '⌫') {
+          pin = pin.slice(0, -1);
+        } else if (key !== '' && pin.length < 4) {
+          pin += key;
+          if (pin.length === 4) {
+            // Verifica immediata a 4 cifre
+            setTimeout(() => {
+              if (pin === firstPin) {
+                overlay.remove();
+                this.createProfile(name, pin);
+              } else {
+                shakeError();
+              }
+            }, 150);
+          }
+        }
+        updateDots();
+      });
+    });
+
+    overlay.querySelector('#pin-back').addEventListener('click', () => {
+      overlay.remove();
+      this._askPinForNewProfile(name);
+    });
   }
 
   selectProfileUI(profileId) {
@@ -76,15 +233,84 @@ class BudgeITApp {
     if (!profile) return;
 
     if (profile.pin) {
-      this.UI.alertModal.showInput(
-        'Profilo protetto',
-        'Inserisci PIN',
-        'password',
-        (pin) => this.loginProfile(profileId, pin)
-      );
+      this._showPinLogin(profileId, profile.name);
     } else {
       this.loginProfile(profileId);
     }
+  }
+
+  /**
+   * Schermata PIN di accesso al profilo (tastierino numerico).
+   */
+  _showPinLogin(profileId, profileName) {
+    const overlay = document.createElement('div');
+    overlay.className = 'ios-picker-overlay';
+    overlay.innerHTML = `
+      <div class="ios-picker-modal pin-modal">
+        <div class="ios-picker-header">
+          <button class="ios-picker-cancel" id="pin-cancel">Annulla</button>
+          <div class="ios-picker-title">${this.escapeHtml(profileName)}</div>
+          <div style="width:60px"></div>
+        </div>
+        <div class="pin-body">
+          <p class="pin-subtitle" id="pin-msg">Inserisci il PIN</p>
+          <div class="pin-dots" id="pin-dots">
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+          </div>
+          <div class="pin-keypad">
+            ${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k => `
+              <button class="pin-key" data-key="${k}">${k}</button>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.classList.add('active'), 10);
+
+    let pin = '';
+    const dots = overlay.querySelectorAll('.pin-dot');
+    const msg  = overlay.querySelector('#pin-msg');
+
+    const updateDots = () => {
+      dots.forEach((d, i) => d.classList.toggle('filled', i < pin.length));
+    };
+
+    overlay.querySelectorAll('.pin-key').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        if (key === '⌫') {
+          pin = pin.slice(0, -1);
+        } else if (key !== '' && pin.length < 4) {
+          pin += key;
+          if (pin.length === 4) {
+            setTimeout(() => {
+              if (storage.verifyPin(profileId, pin)) {
+                overlay.remove();
+                this.loginProfile(profileId, pin);
+              } else {
+                // Shake + reset
+                const dotsEl = overlay.querySelector('#pin-dots');
+                dotsEl.classList.add('pin-shake');
+                setTimeout(() => dotsEl.classList.remove('pin-shake'), 500);
+                msg.textContent = 'PIN errato, riprova';
+                msg.style.color = 'var(--color-danger, #FF3B30)';
+                pin = '';
+                updateDots();
+              }
+            }, 150);
+          }
+        }
+        updateDots();
+      });
+    });
+
+    overlay.querySelector('#pin-cancel').addEventListener('click', () => {
+      overlay.remove();
+    });
   }
 
   loginProfile(profileId, pin = null) {
@@ -103,7 +329,7 @@ class BudgeITApp {
     appState.reset();
     appState.notify('profile-changed', { profileId: id });
     this.enterApp();
-    this.showToast('Profilo creato');
+    this.showToast(pin ? '🔒 Profilo creato con PIN' : 'Profilo creato');
   }
 
   switchProfileFromSettings() {
@@ -134,91 +360,91 @@ class BudgeITApp {
   }
 
   /* ===================== BUDGET ===================== */
-showCategoryPicker() {
-  const categories = storage.getCategories();
-  if (!categories.length) {
-    this.showAlert('Errore', 'Crea prima una categoria');
-    return;
-  }
+  showCategoryPicker() {
+    const categories = storage.getCategories();
+    if (!categories.length) {
+      this.showAlert('Errore', 'Crea prima una categoria');
+      return;
+    }
 
-  const overlay = document.createElement('div');
-  overlay.className = 'ios-picker-overlay';
-  overlay.innerHTML = `
-    <div class="ios-picker-modal">
-      <div class="ios-picker-header">
-        <button class="ios-picker-cancel">Annulla</button>
-        <div class="ios-picker-title">Seleziona categoria</div>
-        <button class="ios-picker-done">Fine</button>
+    const overlay = document.createElement('div');
+    overlay.className = 'ios-picker-overlay';
+    overlay.innerHTML = `
+      <div class="ios-picker-modal">
+        <div class="ios-picker-header">
+          <button class="ios-picker-cancel">Annulla</button>
+          <div class="ios-picker-title">Seleziona categoria</div>
+          <button class="ios-picker-done">Fine</button>
+        </div>
+        <div class="ios-picker-list">
+          ${categories.map(cat => {
+            const name  = this.escapeHtml(cat.name ?? cat);
+            const emoji = cat.emoji ?? this.getCategoryIcon(name);
+            return `
+              <div class="ios-picker-item" data-value="${name}">
+                <span class="ios-picker-item-icon">${emoji}</span>
+                <span class="ios-picker-item-name">${name}</span>
+                <span class="ios-picker-item-check">&#x2713;</span>
+              </div>`;
+          }).join('')}
+        </div>
       </div>
-      <div class="ios-picker-list">
-        ${categories.map(cat => {
-          const name  = this.escapeHtml(cat.name ?? cat);
-          const emoji = cat.emoji ?? this.getCategoryIcon(name);
-          return `
-            <div class="ios-picker-item" data-value="${name}">
-              <span class="ios-picker-item-icon">${emoji}</span>
-              <span class="ios-picker-item-name">${name}</span>
-              <span class="ios-picker-item-check">&#x2713;</span>
-            </div>`;
-        }).join('')}
-      </div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
+    `;
+    document.body.appendChild(overlay);
 
-  const closeOverlay = () => overlay.remove();
+    const closeOverlay = () => overlay.remove();
 
-  overlay.querySelector('.ios-picker-cancel')
-    .addEventListener('click', closeOverlay);
+    overlay.querySelector('.ios-picker-cancel')
+      .addEventListener('click', closeOverlay);
 
-  overlay.querySelector('.ios-picker-done')
-    .addEventListener('click', () => {
-      const selected = overlay.querySelector('.ios-picker-item.selected');
-      if (selected) {
-        const value = selected.dataset.value;
+    overlay.querySelector('.ios-picker-done')
+      .addEventListener('click', () => {
+        const selected = overlay.querySelector('.ios-picker-item.selected');
+        if (selected) {
+          const value = selected.dataset.value;
+          const displayEl = document.getElementById('selected-category-display');
+          if (displayEl) {
+            displayEl.textContent = value;
+            displayEl.dataset.value = value;
+          }
+        }
+        closeOverlay();
+      });
+
+    overlay.querySelectorAll('.ios-picker-item').forEach(item => {
+      item.addEventListener('click', () => {
+        overlay.querySelectorAll('.ios-picker-item')
+          .forEach(el => el.classList.remove('selected'));
+        item.classList.add('selected');
+
+        const value = item.dataset.value;
         const displayEl = document.getElementById('selected-category-display');
         if (displayEl) {
           displayEl.textContent = value;
           displayEl.dataset.value = value;
         }
-      }
-      closeOverlay();
+        setTimeout(closeOverlay, 180);
+      });
     });
 
-  overlay.querySelectorAll('.ios-picker-item').forEach(item => {
-    item.addEventListener('click', () => {
-      overlay.querySelectorAll('.ios-picker-item')
-        .forEach(el => el.classList.remove('selected'));
-      item.classList.add('selected');
-
-      const value = item.dataset.value;
-      const displayEl = document.getElementById('selected-category-display');
-      if (displayEl) {
-        displayEl.textContent = value;
-        displayEl.dataset.value = value;
-      }
-      setTimeout(closeOverlay, 180);
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) closeOverlay();
     });
-  });
 
-  overlay.addEventListener('click', e => {
-    if (e.target === overlay) closeOverlay();
-  });
+    setTimeout(() => overlay.classList.add('active'), 10);
+  }
 
-  setTimeout(() => overlay.classList.add('active'), 10);
-}
-
-  // Mappa categoria → emoji (stringa JS, non HTML)
+  // Mappa categoria → emoji (stringa JS)
   getCategoryIcon(cat) {
     const map = {
-      Alimentari: '\uD83D\uDED2',   // 🛒
-      Trasporti:  '\uD83D\uDE97',   // 🚗
-      Casa:       '\uD83C\uDFE0',   // 🏠
-      Svago:      '\uD83C\uDFAE',   // 🎮
-      Salute:     '\uD83D\uDC8A',   // 💊
-      Altro:      '\uD83D\uDCE6'    // 📦
+      Alimentari: '🛒',
+      Trasporti:  '🚗',
+      Casa:       '🏠',
+      Svago:      '🎮',
+      Salute:     '💊',
+      Altro:      '📦'
     };
-    return map[cat] || '\uD83D\uDCE6'; // default 📦
+    return map[cat] || '🏷️';
   }
 
   setBudgetUI() {
@@ -237,7 +463,6 @@ showCategoryPicker() {
 
     storage.setBudget(category, amount);
 
-    // Reset form
     categoryDisplay.textContent  = 'Seleziona categoria';
     categoryDisplay.dataset.value = '';
     document.getElementById('budget-amount').value = '';
@@ -274,7 +499,7 @@ showCategoryPicker() {
 
     if (form.style.display === 'none') {
       form.style.display = 'flex';
-      icon.textContent   = '-'; // −
+      icon.textContent   = '-';
       const input = document.getElementById('new-category');
       if (input) input.focus();
     } else {
@@ -285,37 +510,37 @@ showCategoryPicker() {
     }
   }
 
- addCategoryUI() {
-  const nameInput  = document.getElementById('new-category');
-  const emojiInput = document.getElementById('new-category-emoji');
+  addCategoryUI() {
+    const nameInput  = document.getElementById('new-category');
+    const emojiInput = document.getElementById('new-category-emoji');
 
-  const rawName  = nameInput?.value?.trim();
-  const rawEmoji = emojiInput?.value?.trim();
+    const rawName  = nameInput?.value?.trim();
+    const rawEmoji = emojiInput?.value?.trim();
 
-  if (!rawName) {
-    this.UI.toast.show('Inserisci un nome categoria', 'error');
-    return;
+    if (!rawName) {
+      this.UI.toast.show('Inserisci un nome categoria', 'error');
+      return;
+    }
+
+    const emoji = rawEmoji || '📦';
+    const categoryLabel = `${emoji} ${rawName}`;
+
+    const categories = storage.getCategories();
+    if (categories.includes(categoryLabel)) {
+      this.UI.toast.show('Categoria già esistente', 'error');
+      return;
+    }
+
+    storage.addCategory(categoryLabel);
+
+    nameInput.value  = '';
+    if (emojiInput) emojiInput.value = '';
+
+    router.routes.budget?.populateCategories?.();
+    router.routes.expenses?.populateCategories?.();
+
+    this.UI.toast.show('Categoria aggiunta', 'success');
   }
-
-  const emoji = rawEmoji || '📦';
-  const categoryLabel = `${emoji} ${rawName}`;
-
-  const categories = storage.getCategories();
-  if (categories.includes(categoryLabel)) {
-    this.UI.toast.show('Categoria già esistente', 'error');
-    return;
-  }
-
-  storage.addCategory(categoryLabel);
-
-  nameInput.value  = '';
-  emojiInput.value = '';
-
-  router.routes.budget?.populateCategories?.();
-  router.routes.expenses?.populateCategories?.();
-
-  this.UI.toast.show('Categoria aggiunta', 'success');
-}
 
   removeCategoryUI(name) {
     this.UI.alertModal.showConfirm({
@@ -353,7 +578,6 @@ showCategoryPicker() {
     const today    = new Date().toISOString().slice(0, 10);
     const date     = dateEl?.value || today;
 
-    // ❌ BLOCCO SPESE FUTURE
     if (date > today) {
       return this.showAlert('Data non valida', 'Non puoi registrare spese future');
     }
@@ -369,7 +593,6 @@ showCategoryPicker() {
 
     storage.addExpense({ name, amount, category, date, notes });
 
-    // Reset campi
     if (nameEl)     nameEl.value     = '';
     if (amountEl)   amountEl.value   = '';
     if (categoryEl) categoryEl.value = '';

@@ -175,21 +175,34 @@ const expensesView = {
     });
 
     if (!expenses.length) {
-      list.innerHTML = `<div class="empty-state">&mdash;</div>`;
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">💸</div>
+          <div class="empty-state-text">Nessuna spesa</div>
+          <div class="empty-state-sub">Aggiungi la tua prima spesa questo mese</div>
+        </div>`;
       return;
     }
 
-    list.innerHTML = expenses.map(e => `
-      <div class="expense-item">
-        <div>${this.getCategoryIcon(e.category)}</div>
-        <div class="expense-info">
-          <div>${escapeHTML(e.name)}</div>
-          <small>${escapeHTML(e.category)}</small>
+    list.innerHTML = expenses.map(e => {
+      // Usa getCategoryIcon centralizzato di App, con fallback locale
+      const icon = window.App?.getCategoryIcon(e.category) || '🏷️';
+      const formattedDate = toDate(e.date).toLocaleDateString('it-IT', {
+        day: '2-digit', month: 'short'
+      });
+
+      return `
+        <div class="expense-item">
+          <div class="expense-icon">${icon}</div>
+          <div class="expense-info">
+            <div class="expense-name">${escapeHTML(e.name)}</div>
+            <small class="expense-meta">${escapeHTML(e.category)} · ${formattedDate}</small>
+          </div>
+          <div class="expense-amount">&euro;${(Number(e.amount) || 0).toFixed(2)}</div>
+          <button class="expense-delete" data-delete="${e.id}">&times;</button>
         </div>
-        <div>&euro;${(Number(e.amount) || 0).toFixed(2)}</div>
-        <button class="expense-delete" data-delete="${e.id}">&times;</button>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   },
 
   // ── eventi ─────────────────────────────────────────
@@ -236,18 +249,6 @@ const expensesView = {
         this.renderExpenseList();
       }
     };
-  },
-
-  // ── emoji ──────────────────────────────────────────
-  getCategoryIcon(cat) {
-    return {
-      Alimentari: '\uD83D\uDED2',   // 🛒
-      Trasporti:  '\uD83D\uDE97',   // 🚗
-      Casa:       '\uD83C\uDFE0',   // 🏠
-      Svago:      '\uD83C\uDFAE',   // 🎮
-      Salute:     '\uD83D\uDC8A',   // 💊
-      Altro:      '\uD83D\uDCE6'    // 📦
-    }[cat] || '\uD83D\uDCE6';       // default 📦
   }
 };
 

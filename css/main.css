@@ -2350,3 +2350,112 @@ body.no-scroll {
 #new-category-emoji::placeholder {
   opacity: 0.4;
 }
+
+/* =====================================================
+   PIN MODAL
+   ===================================================== */
+
+/* Contenitore centrato del modal PIN */
+.pin-modal {
+  max-width: 340px;
+  width: 90%;
+}
+
+/* Area contenuto sotto l'header */
+.pin-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px 32px;
+  gap: 24px;
+}
+
+/* Sottotitolo / messaggio di stato */
+.pin-subtitle {
+  font-size: 14px;
+  color: var(--color-text-secondary, #888);
+  text-align: center;
+  margin: 0;
+  transition: color 0.2s;
+}
+
+/* Puntini indicatori */
+.pin-dots {
+  display: flex;
+  gap: 16px;
+}
+
+.pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary, #007AFF);
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.pin-dot.filled {
+  background: var(--color-primary, #007AFF);
+}
+
+/* Animazione shake su errore */
+@keyframes pinShake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-8px); }
+  40%       { transform: translateX(8px); }
+  60%       { transform: translateX(-6px); }
+  80%       { transform: translateX(6px); }
+}
+
+.pin-shake {
+  animation: pinShake 0.45s ease;
+}
+
+/* Tastierino numerico */
+.pin-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.pin-key {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-surface-2, #f0f0f5);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--color-text, #111);
+  cursor: pointer;
+  transition: background 0.12s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-key:active {
+  background: var(--color-primary, #007AFF);
+  color: #fff;
+  transform: scale(0.92);
+}
+
+/* Cella vuota (posizione 10 nella griglia) */
+.pin-key[data-key=""] {
+  background: transparent;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* Tasto cancella */
+.pin-key[data-key="⌫"] {
+  font-size: 18px;
+  background: var(--color-surface-2, #f0f0f5);
+}
+
+/* Bottone conferma disabilitato */
+#pin-confirm:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
