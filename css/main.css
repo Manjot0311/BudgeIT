@@ -3105,63 +3105,424 @@ body.no-scroll {
 }
 
 /* ========================================
-   QUICK ACTIONS - PREMIUM STYLE
+   HOME - SPESE RECENTI
    ======================================== */
 
-.quick-actions {
-    background: var(--bg-surface);
-    border: 1px solid var(--bg-divider);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    margin-top: var(--space-2xl);
-    transition: all 0.2s ease;
+.recent-expenses-section {
+  margin-bottom: var(--space-2xl);
 }
 
-.quick-actions:hover {
-    box-shadow: var(--shadow);
+.recent-expenses-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+  padding: 0 var(--space-sm);
 }
 
-.quick-action-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 18px 20px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    border-bottom: 1px solid var(--bg-divider);
-    font-family: inherit;
+.recent-expenses-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
 }
 
-.quick-action-item:last-child {
-    border-bottom: none;
+.recent-expenses-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
 }
 
-.quick-action-item:hover {
-    background: var(--accent-hover);
+.recent-expenses-empty {
+  padding: var(--space-2xl) var(--space-lg);
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 14px;
 }
 
-.quick-action-item:active {
-    background: var(--accent-active);
+.recent-expense-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-divider);
+  border-radius: var(--radius-lg);
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-xs);
 }
 
-.quick-action-label {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-primary);
-    letter-spacing: -0.01em;
+.recent-expense-item:hover {
+  border-color: var(--accent);
+  background: var(--accent-hover);
+  box-shadow: var(--shadow-sm);
 }
 
-.quick-action-chevron {
-    font-size: 22px;
-    font-weight: 300;
-    color: var(--text-tertiary);
-    line-height: 1;
-    transition: transform 0.2s ease;
+.recent-expense-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  width: 32px;
+  text-align: center;
+  line-height: 1;
 }
 
-.quick-action-item:active .quick-action-chevron {
-    transform: translateX(4px);
+.recent-expense-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.recent-expense-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.recent-expense-category {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.recent-expense-date {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.recent-expense-amount {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+}
+
+.recent-expenses-see-all {
+  display: block;
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+}
+
+.recent-expenses-see-all:hover {
+  background: var(--accent-hover);
+}
+
+.recent-expenses-see-all:active {
+  background: var(--accent-active);
+}
+
+/* ========================================
+   HOME - EMOJI NELLA CARD PRINCIPALE
+   ======================================== */
+
+.hero-card-header-with-emoji {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: var(--space-lg);
+}
+
+.hero-card-emoji {
+  font-size: 48px;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+/* ========================================
+   HOME - SPESE RECENTI - POSIZIONAMENTO
+   ======================================== */
+
+.recent-expenses-section {
+  margin-bottom: 120px;
+}
+
+.recent-expenses-see-all {
+  display: block;
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  background: transparent;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+}
+
+.recent-expenses-see-all:hover {
+  background: var(--accent-hover);
+}
+
+.recent-expenses-see-all:active {
+  background: var(--accent-active);
+}
+
+.home-actions-dock {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-divider);
+  border-radius: 24px;
+  padding: 14px 32px;
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  max-width: 95%;
+  width: auto;
+}
+
+/* Bottone dock generico */
+.home-action-dock-item {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.home-action-dock-item:hover {
+  background: var(--accent-hover);
+  color: var(--accent);
+}
+
+.home-action-dock-item:active {
+  background: var(--accent-active);
+  transform: scale(0.92);
+}
+
+.home-action-dock-item svg {
+  width: 34px;
+  height: 34px;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+/* Bottone centrale (+) rotondo - CENTRATO PERFETTAMENTE */
+.home-action-dock-center {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  color: var(--bg-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  box-shadow: var(--shadow-lg);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  padding: 0;
+  position: relative;
+}
+
+.home-action-dock-center:hover {
+  background: var(--accent-secondary);
+  box-shadow: var(--shadow-xl);
+}
+
+.home-action-dock-center:active {
+  transform: scale(0.90);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Quando il menu è aperto, il bottone si trasforma in X */
+.home-action-dock-center.open {
+  transform: rotate(45deg);
+}
+
+/* Simbolo + PERFETTAMENTE CENTRATO */
+.home-action-plus {
+  font-size: 42px;
+  font-weight: 200;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  top: 0;
+  left: 0;
+}
+
+/* Dark mode */
+[data-theme="dark"] .home-actions-dock {
+  background: var(--bg-surface);
+  border-color: var(--bg-divider);
+}
+
+[data-theme="dark"] .home-action-dock-item:hover {
+  background: var(--bg-elevated);
+  color: var(--accent);
+}
+
+/*MENU AZIONI RAPIDE (Popup) - NASCOSTO DI DEFAULT */
+.home-action-menu {
+  position: fixed;
+  bottom: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-divider);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  min-width: 240px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* CLASSE .show PER MOSTRARE IL MENU */
+.home-action-menu.show {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+  animation: slideUpMenu 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUpMenu {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.home-action-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-lg);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--bg-divider);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  text-align: left;
+}
+
+.home-action-menu-item:last-child {
+  border-bottom: none;
+}
+
+.home-action-menu-item:hover {
+  background: var(--accent-hover);
+}
+
+.home-action-menu-item:active {
+  background: var(--accent-active);
+}
+
+.home-action-menu-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+  line-height: 1;
+}
+
+.home-action-menu-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* Dark mode */
+[data-theme="dark"] .home-actions-dock {
+  background: var(--bg-surface);
+  border-color: var(--bg-divider);
+}
+
+[data-theme="dark"] .home-action-dock-item:hover {
+  background: var(--bg-elevated);
+  color: var(--accent);
+}
+
+[data-theme="dark"] .home-action-menu {
+  background: var(--bg-surface);
+  border-color: var(--bg-divider);
+}
+
+[data-theme="dark"] .home-action-menu-item {
+  border-bottom-color: var(--bg-divider);
+}
+
+[data-theme="dark"] .home-action-menu-item:hover {
+  background: var(--bg-elevated);
+}
+
+/* RESPONSIVE */
+@media (max-width: 375px) {
+  .home-actions-dock {
+    gap: 12px;
+    padding: 10px 16px;
+    bottom: 16px;
+  }
+
+  .home-action-dock-item {
+    width: 40px;
+    height: 40px;
+  }
+
+  .home-action-dock-center {
+    width: 48px;
+    height: 48px;
+  }
+
+  .home-action-plus {
+    font-size: 28px;
+  }
+
+  .home-action-menu {
+    min-width: 200px;
+  }
 }
 
 /* RESPONSIVE - Mantiene proporzioni su schermi piccoli */
