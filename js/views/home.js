@@ -139,7 +139,7 @@ const homeView = {
           </button>
         </div>
 
-        <!-- MENU AZIONI RAPIDE (nascosto di default) -->
+        <!-- MENU AZIONI RAPIDE (nascosto di default) - SENZA style="display: none;" -->
         <div class="home-action-menu" id="action-menu">
           <button class="home-action-menu-item" onclick="App.switchView('expenses')">
             <span class="home-action-menu-icon">✎</span>
