@@ -140,13 +140,27 @@ const homeView = {
         </div>
 
         <!-- MENU AZIONI RAPIDE (nascosto di default) -->
-        <div class="home-action-menu" id="action-menu" style="display: none;">
+        <div class="home-action-menu" id="action-menu">
           <button class="home-action-menu-item" onclick="App.switchView('expenses')">
             <span class="home-action-menu-icon">✎</span>
             <span class="home-action-menu-label">Registra nuova spesa</span>
           </button>
           <button class="home-action-menu-item" onclick="App.switchView('reports')">
-            <span class="home-action-menu-icon">📊</span>
+            <span class="home-action-menu-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                <!-- Documento -->
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                
+                <!-- Linee testo -->
+                <line x1="9" y1="11" x2="15" y2="11"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+                
+                <!-- PDF badge rosso -->
+                <rect x="9" y="17" width="6" height="4" rx="0.5" fill="currentColor"></rect>
+                <text x="12" y="20.5" text-anchor="middle" font-size="2" font-weight="bold" fill="white">PDF</text>
+              </svg>
+            </span>
             <span class="home-action-menu-label">Genera Report PDF</span>
           </button>
         </div>

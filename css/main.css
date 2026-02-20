@@ -3394,7 +3394,7 @@ body.no-scroll {
   color: var(--accent);
 }
 
-/*MENU AZIONI RAPIDE (Popup) - NASCOSTO DI DEFAULT */
+/* MENU AZIONI RAPIDE (Popup) - NASCOSTO DI DEFAULT */
 .home-action-menu {
   position: fixed;
   bottom: 92px;
