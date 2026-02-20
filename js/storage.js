@@ -5,6 +5,40 @@ class StorageManager {
     this.data = this.load();
   }
 
+  /* ===================== CRYPTO UTILS ===================== */
+
+  /**
+   * Hash SHA-256 per PIN (sicuro)
+   * Fallback a btoa se SubtleCrypto non disponibile
+   */
+  async hashPin(pin) {
+    if (typeof pin !== 'string' || !pin) return null;
+
+    try {
+      // Usa Web Crypto API se disponibile (HTTPS o localhost)
+      const encoder = new TextEncoder();
+      const data = encoder.encode(pin);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return `sha256:${hashHex}`;
+    } catch (e) {
+      // Fallback: usa btoa (meno sicuro, ma funziona offline)
+      console.warn('SHA-256 non disponibile, fallback a btoa:', e);
+      return `btoa:${btoa(pin)}`;
+    }
+  }
+
+  /**
+   * Verifica PIN hashato
+   */
+  async verifyHashedPin(storedHash, inputPin) {
+    if (!storedHash || typeof inputPin !== 'string') return false;
+
+    const inputHash = await this.hashPin(inputPin);
+    return storedHash === inputHash;
+  }
+
   /* ===================== CORE ===================== */
 
   load() {
@@ -23,7 +57,7 @@ class StorageManager {
 
   getInitialState() {
     return {
-      appVersion: '2.0.0',
+      appVersion: '3.0.0',
       activeProfileId: null,
       profiles: {},
       lastModified: new Date().toISOString()
@@ -117,13 +151,19 @@ class StorageManager {
     }
   }
 
-  createProfile(name, pin = null) {
+  /**
+   * Crea profilo con PIN opzionale (hashato)
+   */
+  async createProfile(name, pin = null) {
     const id = 'profile_' + Date.now();
+
+    // Se PIN fornito, hashalo; altrimenti null
+    const hashedPin = pin ? await this.hashPin(pin) : null;
 
     this.data.profiles[id] = {
       id,
       name,
-      pin: pin ? btoa(pin) : null,
+      pin: hashedPin,
       createdAt: new Date().toISOString(),
       expenses: [],
       categories: [
@@ -145,17 +185,52 @@ class StorageManager {
     return id;
   }
 
-  verifyPin(id, pin) {
+  /**
+   * Verifica PIN (con supporto hash)
+   */
+  async verifyPin(id, pin) {
     const p = this.getProfile(id);
     if (!p) return false;
-    if (!p.pin) return true;
-    return p.pin === btoa(pin);
+    if (!p.pin) return true; // Nessun PIN impostato
+    return await this.verifyHashedPin(p.pin, pin);
+  }
+
+  /**
+   * Aggiorna PIN del profilo attivo
+   */
+  async updatePin(id, newPin) {
+    const p = this.getProfile(id);
+    if (!p) return false;
+
+    const hashedPin = newPin ? await this.hashPin(newPin) : null;
+    p.pin = hashedPin;
+    this.save();
+    return true;
+  }
+
+  /**
+   * Rimuovi PIN dal profilo
+   */
+  removePin(id) {
+    const p = this.getProfile(id);
+    if (!p) return false;
+    p.pin = null;
+    this.save();
+    return true;
   }
 
   renameProfile(id, name) {
     const p = this.getProfile(id);
     if (!p) return;
     p.name = name;
+    this.save();
+  }
+
+  deleteProfile(id) {
+    delete this.data.profiles[id];
+    if (this.data.activeProfileId === id) {
+      this.data.activeProfileId = null;
+    }
     this.save();
   }
 

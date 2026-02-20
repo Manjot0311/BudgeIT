@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'budgeit-v0.2.01';
+const CACHE_VERSION = 'budgeit-v0.3.00';
 const CACHE_NAME = CACHE_VERSION;
 
 const CACHE_URLS = [

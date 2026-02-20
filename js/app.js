@@ -6,6 +6,7 @@ import expensesView from './views/expenses.js';
 import budgetView from './views/budget.js';
 import statsView from './views/stats.js';
 import onboardingView from './views/onboarding.js';
+import reportsView from './views/reports.js';
 import settingsModal from './ui/settings-modal.js';
 import alertModal from './ui/alert-modal.js';
 import toast from './ui/toast.js';
@@ -22,6 +23,7 @@ class BudgeITApp {
     router.register('budget',     budgetView);
     router.register('stats',      statsView);
     router.register('onboarding', onboardingView);
+    router.register('reports',    reportsView);
 
     const profiles = storage.getProfiles();
     await router.navigate('onboarding', { mode: profiles.length ? 'login' : 'first' });
@@ -194,7 +196,7 @@ class BudgeITApp {
       dotsEl.classList.add('pin-shake');
       setTimeout(() => dotsEl.classList.remove('pin-shake'), 500);
       msg.textContent = 'PIN non corrisponde, riprova';
-      msg.style.color = 'var(--color-danger, #FF3B30)';
+      msg.style.color = 'var(--danger)';
       pin = '';
       updateDots();
     };
@@ -207,7 +209,6 @@ class BudgeITApp {
         } else if (key !== '' && pin.length < 4) {
           pin += key;
           if (pin.length === 4) {
-            // Verifica immediata a 4 cifre
             setTimeout(() => {
               if (pin === firstPin) {
                 overlay.remove();
@@ -280,15 +281,15 @@ class BudgeITApp {
     };
 
     overlay.querySelectorAll('.pin-key').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const key = btn.dataset.key;
         if (key === '⌫') {
           pin = pin.slice(0, -1);
         } else if (key !== '' && pin.length < 4) {
           pin += key;
           if (pin.length === 4) {
-            setTimeout(() => {
-              if (storage.verifyPin(profileId, pin)) {
+            setTimeout(async () => {
+              if (await storage.verifyPin(profileId, pin)) {
                 overlay.remove();
                 this.loginProfile(profileId, pin);
               } else {
@@ -297,7 +298,7 @@ class BudgeITApp {
                 dotsEl.classList.add('pin-shake');
                 setTimeout(() => dotsEl.classList.remove('pin-shake'), 500);
                 msg.textContent = 'PIN errato, riprova';
-                msg.style.color = 'var(--color-danger, #FF3B30)';
+                msg.style.color = 'var(--danger)';
                 pin = '';
                 updateDots();
               }
@@ -313,8 +314,8 @@ class BudgeITApp {
     });
   }
 
-  loginProfile(profileId, pin = null) {
-    if (!storage.verifyPin(profileId, pin)) {
+  async loginProfile(profileId, pin = null) {
+    if (!(await storage.verifyPin(profileId, pin))) {
       this.showAlert('Errore', 'PIN non valido');
       return;
     }
@@ -324,12 +325,264 @@ class BudgeITApp {
     this.enterApp();
   }
 
-  createProfile(name, pin = null) {
-    const id = storage.createProfile(name, pin);
+  async createProfile(name, pin = null) {
+    const id = await storage.createProfile(name, pin);
     appState.reset();
     appState.notify('profile-changed', { profileId: id });
     this.enterApp();
     this.showToast(pin ? '🔒 Profilo creato con PIN' : 'Profilo creato');
+  }
+
+  /**
+   * Modifica PIN del profilo attivo
+   */
+  editPinUI() {
+    const profile = storage.getActiveProfile();
+    if (!profile) return;
+
+    if (profile.pin) {
+      // PIN già impostato → chiedi vecchio PIN, poi nuovo
+      this._verifyOldPinForEdit();
+    } else {
+      // Nessun PIN → crea nuovo
+      this._askNewPin();
+    }
+  }
+
+  /**
+   * Verifica PIN vecchio prima di cambiarlo
+   */
+  _verifyOldPinForEdit() {
+    const overlay = document.createElement('div');
+    overlay.className = 'ios-picker-overlay';
+    overlay.innerHTML = `
+      <div class="ios-picker-modal pin-modal">
+        <div class="ios-picker-header">
+          <button class="ios-picker-cancel" id="pin-cancel">Annulla</button>
+          <div class="ios-picker-title">Verifica PIN attuale</div>
+          <div style="width:60px"></div>
+        </div>
+        <div class="pin-body">
+          <p class="pin-subtitle" id="pin-msg">Inserisci il PIN attuale</p>
+          <div class="pin-dots" id="pin-dots">
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+          </div>
+          <div class="pin-keypad">
+            ${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k => `
+              <button class="pin-key" data-key="${k}">${k}</button>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.classList.add('active'), 10);
+
+    let pin = '';
+    const dots = overlay.querySelectorAll('.pin-dot');
+    const msg  = overlay.querySelector('#pin-msg');
+
+    const updateDots = () => {
+      dots.forEach((d, i) => d.classList.toggle('filled', i < pin.length));
+    };
+
+    overlay.querySelectorAll('.pin-key').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const key = btn.dataset.key;
+        if (key === '⌫') {
+          pin = pin.slice(0, -1);
+        } else if (key !== '' && pin.length < 4) {
+          pin += key;
+          if (pin.length === 4) {
+            setTimeout(async () => {
+              const profile = storage.getActiveProfile();
+              if (await storage.verifyPin(profile.id, pin)) {
+                overlay.remove();
+                this._askNewPin();
+              } else {
+                const dotsEl = overlay.querySelector('#pin-dots');
+                dotsEl.classList.add('pin-shake');
+                setTimeout(() => dotsEl.classList.remove('pin-shake'), 500);
+                msg.textContent = 'PIN errato, riprova';
+                msg.style.color = 'var(--danger)';
+                pin = '';
+                updateDots();
+              }
+            }, 150);
+          }
+        }
+        updateDots();
+      });
+    });
+
+    overlay.querySelector('#pin-cancel').addEventListener('click', () => {
+      overlay.remove();
+    });
+  }
+
+  /**
+   * Chiedi nuovo PIN
+   */
+  _askNewPin() {
+    const overlay = document.createElement('div');
+    overlay.className = 'ios-picker-overlay';
+    overlay.innerHTML = `
+      <div class="ios-picker-modal pin-modal">
+        <div class="ios-picker-header">
+          <button class="ios-picker-cancel" id="pin-cancel">Annulla</button>
+          <div class="ios-picker-title">Nuovo PIN</div>
+          <button class="ios-picker-done" id="pin-confirm" disabled>Conferma</button>
+        </div>
+        <div class="pin-body">
+          <p class="pin-subtitle">Imposta un nuovo PIN a 4 cifre</p>
+          <div class="pin-dots" id="pin-dots">
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+          </div>
+          <div class="pin-keypad">
+            ${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k => `
+              <button class="pin-key" data-key="${k}">${k}</button>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.classList.add('active'), 10);
+
+    let pin = '';
+    const dots = overlay.querySelectorAll('.pin-dot');
+    const confirmBtn = overlay.querySelector('#pin-confirm');
+
+    const updateDots = () => {
+      dots.forEach((d, i) => d.classList.toggle('filled', i < pin.length));
+      confirmBtn.disabled = pin.length < 4;
+    };
+
+    overlay.querySelectorAll('.pin-key').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        if (key === '⌫') {
+          pin = pin.slice(0, -1);
+        } else if (key !== '' && pin.length < 4) {
+          pin += key;
+        }
+        updateDots();
+      });
+    });
+
+    confirmBtn.addEventListener('click', () => {
+      if (pin.length < 4) return;
+      const newPin = pin;
+      overlay.remove();
+      this._confirmNewPin(newPin);
+    });
+
+    overlay.querySelector('#pin-cancel').addEventListener('click', () => {
+      overlay.remove();
+    });
+  }
+
+  /**
+   * Conferma nuovo PIN
+   */
+  _confirmNewPin(newPin) {
+    const overlay = document.createElement('div');
+    overlay.className = 'ios-picker-overlay';
+    overlay.innerHTML = `
+      <div class="ios-picker-modal pin-modal">
+        <div class="ios-picker-header">
+          <button class="ios-picker-cancel" id="pin-back">Indietro</button>
+          <div class="ios-picker-title">Conferma PIN</div>
+          <div style="width:60px"></div>
+        </div>
+        <div class="pin-body">
+          <p class="pin-subtitle" id="pin-msg">Reinserisci il nuovo PIN</p>
+          <div class="pin-dots" id="pin-dots">
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+          </div>
+          <div class="pin-keypad">
+            ${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k => `
+              <button class="pin-key" data-key="${k}">${k}</button>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.classList.add('active'), 10);
+
+    let pin = '';
+    const dots = overlay.querySelectorAll('.pin-dot');
+    const msg  = overlay.querySelector('#pin-msg');
+
+    const updateDots = () => {
+      dots.forEach((d, i) => d.classList.toggle('filled', i < pin.length));
+    };
+
+    overlay.querySelectorAll('.pin-key').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const key = btn.dataset.key;
+        if (key === '⌫') {
+          pin = pin.slice(0, -1);
+        } else if (key !== '' && pin.length < 4) {
+          pin += key;
+          if (pin.length === 4) {
+            setTimeout(async () => {
+              if (pin === newPin) {
+                const profile = storage.getActiveProfile();
+                await storage.updatePin(profile.id, newPin);
+                overlay.remove();
+                this.UI.settingsModal.refresh();
+                this.showToast('🔒 PIN aggiornato');
+              } else {
+                const dotsEl = overlay.querySelector('#pin-dots');
+                dotsEl.classList.add('pin-shake');
+                setTimeout(() => dotsEl.classList.remove('pin-shake'), 500);
+                msg.textContent = 'PIN non corrisponde, riprova';
+                msg.style.color = 'var(--danger)';
+                pin = '';
+                updateDots();
+              }
+            }, 150);
+          }
+        }
+        updateDots();
+      });
+    });
+
+    overlay.querySelector('#pin-back').addEventListener('click', () => {
+      overlay.remove();
+      this._askNewPin();
+    });
+  }
+
+  /**
+   * Rimuovi PIN dal profilo
+   */
+  removePinUI() {
+    const profile = storage.getActiveProfile();
+    if (!profile || !profile.pin) return;
+
+    this.UI.alertModal.showConfirm({
+      title: 'Rimuovi PIN',
+      message: 'Il profilo non sarà più protetto da PIN',
+      confirmText: 'Rimuovi',
+      cancelText: 'Annulla',
+      onConfirm: () => {
+        storage.removePin(profile.id);
+        this.UI.settingsModal.refresh();
+        this.showToast('PIN rimosso');
+      }
+    });
   }
 
   switchProfileFromSettings() {
@@ -352,11 +605,30 @@ class BudgeITApp {
         if (!clean) return;
         storage.renameProfile(profile.id, clean);
         appState.notify('profile-renamed', { profileId: profile.id, name: clean });
-        this.UI.settingsModal.open();
+        this.UI.settingsModal.refresh();
         this.showToast('Profilo rinominato');
       },
       profile.name
     );
+  }
+
+  deleteProfileUI() {
+    const profile = storage.getActiveProfile();
+    if (!profile) return;
+
+    this.UI.alertModal.showConfirm({
+      title: 'Elimina profilo',
+      message: `Sei sicuro di voler eliminare "${profile.name}"? Questa azione non può essere annullata.`,
+      confirmText: 'Elimina',
+      cancelText: 'Annulla',
+      onConfirm: () => {
+        storage.deleteProfile(profile.id);
+        appState.reset();
+        storage.clearActiveProfile();
+        router.navigate('onboarding', { mode: 'switch' });
+        this.showToast('Profilo eliminato');
+      }
+    });
   }
 
   /* ===================== BUDGET ===================== */

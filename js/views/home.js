@@ -99,6 +99,10 @@ const homeView = {
             <span class="quick-action-label">Budget</span>
             <span class="quick-action-chevron">›</span>
           </div>
+          <div class="quick-action-item" onclick="App.switchView('reports')">
+            <span class="quick-action-label">📄 Report PDF</span>
+            <span class="quick-action-chevron">›</span>
+          </div>
         </div>
 
       </div>
