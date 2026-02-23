@@ -21,31 +21,22 @@ class ReportGenerator {
     const progressScreen = this.createProgressScreen();
     document.body.appendChild(progressScreen);
 
+    // Tempo minimo di visibilità del loader: 800ms
+    const minVisibilityStart = Date.now();
+
     try {
-      this.updateProgress(progressScreen, 'Aggregating financial records...', 15);
-      await this.delay(300);
-
       const reportData = reportsConfig.buildReportData(config);
-
-      this.updateProgress(progressScreen, 'Validating entries...', 35);
-      await this.delay(400);
 
       if (!reportData.expenses.length) {
         throw new Error('Nessuna spesa trovata nel periodo selezionato');
       }
 
-      this.updateProgress(progressScreen, 'Rendering document...', 60);
-      await this.delay(300);
-
-      this.updateProgress(progressScreen, 'Finalizing document...', 85);
-      await this.delay(300);
-
       const pdf = await this.buildPDF(reportData);
 
-      this.updateProgress(progressScreen, 'Download starting...', 100);
-      await this.delay(400);
+      // Garantisce almeno 800ms di loader visibile
+      const elapsed = Date.now() - minVisibilityStart;
+      if (elapsed < 800) await this.delay(800 - elapsed);
 
-      // ✅ NOME FILE MIGLIORATO: BudgeIT_Report_[Periodo].pdf
       const fileName = this.generateFileName(reportData);
       pdf.save(fileName);
 
@@ -55,6 +46,8 @@ class ReportGenerator {
       return true;
     } catch (error) {
       console.error('Report generation failed:', error);
+      const elapsed = Date.now() - minVisibilityStart;
+      if (elapsed < 800) await this.delay(800 - elapsed);
       progressScreen.remove();
       this.isGenerating = false;
       alert('Errore nella generazione del report: ' + error.message);
@@ -115,408 +108,243 @@ class ReportGenerator {
   }
 
   /**
-   * Costruisce il PDF
+   * Costruisce il PDF — struttura definitiva
+   * Header → Titolo → Tabella → Totale (solo ultima pagina) → Footer
    */
   async buildPDF(reportData) {
-    if (!window.jspdf) {
-      throw new Error('jsPDF non caricato');
-    }
+    if (!window.jspdf) throw new Error('jsPDF non caricato');
 
-    const jsPDF = window.jspdf.jsPDF;
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 15;
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const mL    = 18;
+    const mR    = 18;
+    const mTop  = 32;
+    const mBot  = 20;
+    const contW = pageW - mL - mR;
 
-    // ─── COPERTINA ───
-    this.addCover(pdf, reportData, pageWidth, pageHeight);
-    pdf.addPage();
+    // 1. Header
+    let y = this.addHeader(pdf, reportData, pageW, mL, mR, mTop);
 
-    // ─── RIEPILOGO ───
-    let yPosition = margin;
-    this.addSummary(pdf, reportData, pageWidth, yPosition);
-    yPosition += 60; // ← RIDOTTO: meno spazio occupato
+    // 2. Tabella movimenti + totale in fondo
+    this.addMovementsTable(pdf, reportData, pageW, pageH, mL, mR, mTop, mBot, contW, y);
 
-    // ─── ANALISI CATEGORIE ───
-    if (reportData.config.includeCategoryAnalysis) {
-      if (yPosition > pageHeight - 90) {
-        pdf.addPage();
-        yPosition = margin;
-      }
-      this.addCategoryAnalysis(pdf, reportData, pageWidth, yPosition);
-      yPosition += 90;
-    }
-
-    // ─── ANALISI BUDGET ───
-    if (reportData.config.includeBudgetAnalysis) {
-      if (yPosition > pageHeight - 70) {
-        pdf.addPage();
-        yPosition = margin;
-      }
-      this.addBudgetAnalysis(pdf, reportData, pageWidth, yPosition);
-      yPosition += 70;
-    }
-
-    // ─── LOG COMPLETO ───
-    if (reportData.config.includeFullLog) {
-      pdf.addPage();
-      yPosition = margin;
-      this.addFullLog(pdf, reportData, pageWidth, yPosition);
-    }
-
-    // ─── FOOTER SU TUTTE LE PAGINE ───
-    const pages = pdf.internal.pages.length - 1;
-    for (let i = 1; i <= pages; i++) {
+    // 3. Footer su tutte le pagine
+    const totalPages = pdf.internal.pages.length - 1;
+    for (let i = 1; i <= totalPages; i++) {
       pdf.setPage(i);
-      this.addFooter(pdf, reportData, pageWidth, pageHeight, i, pages);
+      this.addFooter(pdf, reportData, pageW, pageH, mL, mR, i, totalPages);
     }
 
     return pdf;
   }
 
   /**
-   * ✅ COPERTINA ELEGANTE
+   * HEADER istituzionale
+   * Sinistra: BudgeIT bold
+   * Destra: descrizione + periodo + data
+   * Sotto: linea divisoria
    */
-  addCover(pdf, reportData, pageWidth, pageHeight) {
-    const centerX = pageWidth / 2;
+  addHeader(pdf, reportData, pageW, mL, mR, mTop) {
+    const rightX = pageW - mR;
 
-    // Background gradient (simulato con rettangoli)
-    pdf.setFillColor(26, 26, 26);
-    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-
-    // Decorazione superiore
-    pdf.setFillColor(100, 100, 100);
-    pdf.rect(0, 0, pageWidth, 60, 'F');
-
-    // Logo/Titolo principale
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(56);
+    // BudgeIT — 18pt bold
     pdf.setFont('helvetica', 'bold');
-    pdf.text('BudgeIT', centerX, pageHeight / 2 - 30, { align: 'center' });
-
-    // Sottotitolo
     pdf.setFontSize(18);
+    pdf.setTextColor(20, 20, 20);
+    pdf.text('BudgeIT', mL, mTop);
+
+    // Blocco destra — 8pt normale
     pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(180, 180, 180);
-    pdf.text('Financial Report', centerX, pageHeight / 2 + 5, { align: 'center' });
-
-    // Periodo
-    pdf.setFontSize(14);
-    pdf.setTextColor(220, 220, 220);
-    pdf.text(reportData.period, centerX, pageHeight / 2 + 25, { align: 'center' });
-
-    // Linea decorativa
-    pdf.setDrawColor(100, 100, 100);
-    pdf.setLineWidth(1);
-    pdf.line(centerX - 30, pageHeight / 2 + 35, centerX + 30, pageHeight / 2 + 35);
-
-    // Profilo
-    pdf.setFontSize(11);
-    pdf.setTextColor(160, 160, 160);
-    pdf.text(`Profilo: ${reportData.profileName}`, centerX, pageHeight / 2 + 50, { align: 'center' });
-
-    // Data e ID in basso
-    pdf.setFontSize(10);
-    pdf.setTextColor(128, 128, 128);
-    pdf.text(`Generated: ${reportData.generatedAt}`, centerX, pageHeight - 50, { align: 'center' });
-
-    pdf.setFontSize(9);
-    pdf.setTextColor(100, 100, 100);
-    pdf.text(`Doc ID: ${reportData.documentId}`, centerX, pageHeight - 40, { align: 'center' });
-
-    // Versione
     pdf.setFontSize(8);
     pdf.setTextColor(80, 80, 80);
-    pdf.text('BudgeIT v0.3 • Report Generator', centerX, pageHeight - 30, { align: 'center' });
+    pdf.text('Documento riepilogativo delle spese', rightX, mTop - 6, { align: 'right' });
+    pdf.text(`Periodo: ${reportData.period}`,        rightX, mTop - 1, { align: 'right' });
+    pdf.text(`Generato il: ${reportData.generatedAt}`, rightX, mTop + 4, { align: 'right' });
+
+    // Linea divisoria
+    const lineY = mTop + 9;
+    pdf.setDrawColor(200, 200, 200);
+    pdf.setLineWidth(0.3);
+    pdf.line(mL, lineY, pageW - mR, lineY);
+
+    return lineY + 10;
   }
 
   /**
-   * ✅ RIEPILOGO SEMPLIFICATO (solo Total + Transazioni)
+   * TABELLA MOVIMENTI
+   * Titolo → header colonne → righe → totale contabile solo sull'ultima pagina
    */
-  addSummary(pdf, reportData, pageWidth, startY) {
-    const margin = 15;
-    const contentWidth = pageWidth - 2 * margin;
-    const colWidth = contentWidth / 2;
-
-    // Titolo sezione
-    pdf.setFontSize(16);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(26, 26, 26);
-    pdf.text('Riepilogo', margin, startY);
-
-    startY += 12;
-
-    // ─── BOX STATISTICHE ───
-    // Box totale spese (sinistro)
-    pdf.setFillColor(248, 248, 248);
-    pdf.setDrawColor(220, 220, 220);
-    pdf.rect(margin, startY, colWidth - 5, 50, 'FD');
-
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(120, 120, 120);
-    pdf.text('TOTALE SPESE', margin + 5, startY + 8);
-
-    pdf.setFontSize(32);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(26, 26, 26);
-    pdf.text(CryptoUtils.formatCurrency(reportData.stats.total), margin + 5, startY + 32);
-
-    // Box transazioni (destro)
-    const col2X = margin + colWidth;
-    pdf.setFillColor(248, 248, 248);
-    pdf.setDrawColor(220, 220, 220);
-    pdf.rect(col2X + 5, startY, colWidth - 5, 50, 'FD');
-
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(120, 120, 120);
-    pdf.text('TRANSAZIONI', col2X + 10, startY + 8);
-
-    pdf.setFontSize(32);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(26, 26, 26);
-    pdf.text(reportData.stats.count.toString(), col2X + 10, startY + 32);
-  }
-
-  /**
-   * ✅ ANALISI CATEGORIE MIGLIORATA
-   */
-  addCategoryAnalysis(pdf, reportData, pageWidth, startY) {
-    const margin = 15;
-    const contentWidth = pageWidth - 2 * margin;
-
-    // Titolo
-    pdf.setFontSize(14);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(26, 26, 26);
-    pdf.text('Analisi per Categoria', margin, startY);
-
-    startY += 12;
-
-    // Header tabella
-    pdf.setFontSize(9);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(100, 100, 100);
-    pdf.setFillColor(248, 248, 248);
-    pdf.rect(margin, startY, contentWidth, 7, 'F');
-
-    pdf.text('Categoria', margin + 3, startY + 5);
-    pdf.text('Importo', margin + 70, startY + 5);
-    pdf.text('%', margin + 110, startY + 5);
-    pdf.text('N°', margin + 125, startY + 5);
-
-    startY += 10;
-
-    // Righe categoria
-    const categories = Object.keys(reportData.grouped).sort(
-      (a, b) => reportData.grouped[b].total - reportData.grouped[a].total
+  addMovementsTable(pdf, reportData, pageW, pageH, mL, mR, mTop, mBot, contW, startY) {
+    const expenses = [...reportData.expenses].sort(
+      (a, b) => new Date(a.date) - new Date(b.date)
     );
 
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(50, 50, 50);
+    const rowH    = 6;
+    const footerH = 15; // spazio riservato al footer
+    const totalH  = 14; // spazio riservato al totale contabile
 
-    categories.forEach((cat, idx) => {
-      const data = reportData.grouped[cat];
-      const pct = reportData.percentages[cat];
-
-      // Alternare colori di sfondo
-      if (idx % 2 === 0) {
-        pdf.setFillColor(252, 252, 252);
-        pdf.rect(margin, startY - 3.5, contentWidth, 6, 'F');
-      }
-
-      pdf.setFontSize(9);
-      pdf.text(cat, margin + 3, startY);
-      pdf.text(CryptoUtils.formatCurrency(data.total), margin + 70, startY);
-      
-      // Colore per percentuale
-      if (pct > 50) {
-        pdf.setTextColor(200, 53, 50);
-      } else if (pct > 30) {
-        pdf.setTextColor(200, 122, 0);
-      } else {
-        pdf.setTextColor(30, 123, 75);
-      }
-      
-      pdf.text(`${pct}%`, margin + 110, startY);
-      pdf.setTextColor(50, 50, 50);
-      pdf.text(data.count.toString(), margin + 125, startY);
-
-      startY += 6;
-    });
-  }
-
-  /**
-   * ✅ ANALISI BUDGET MIGLIORATA
-   */
-  addBudgetAnalysis(pdf, reportData, pageWidth, startY) {
-    const margin = 15;
-    const contentWidth = pageWidth - 2 * margin;
-
-    pdf.setFontSize(14);
+    // ── Titolo sezione ──
     pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(26, 26, 26);
-    pdf.text('Budget vs Utilizzo', margin, startY);
-
-    startY += 12;
-
-    const budgetItems = reportData.budgetAnalysis.filter(b => b.limit > 0);
-
-    if (!budgetItems.length) {
-      pdf.setFontSize(10);
-      pdf.setTextColor(150, 150, 150);
-      pdf.text('Nessun budget impostato', margin, startY);
-      return;
-    }
-
-    // Header
-    pdf.setFontSize(9);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(100, 100, 100);
-    pdf.setFillColor(248, 248, 248);
-    pdf.rect(margin, startY, contentWidth, 7, 'F');
-
-    pdf.text('Categoria', margin + 3, startY + 5);
-    pdf.text('Limite', margin + 60, startY + 5);
-    pdf.text('Speso', margin + 95, startY + 5);
-    pdf.text('% Utilizzo', margin + 125, startY + 5);
-
-    startY += 10;
-
-    pdf.setFont('helvetica', 'normal');
-
-    budgetItems.forEach((item, idx) => {
-      // Sfondo alternato
-      if (idx % 2 === 0) {
-        pdf.setFillColor(252, 252, 252);
-        pdf.rect(margin, startY - 3.5, contentWidth, 6, 'F');
-      }
-
-      pdf.setFontSize(9);
-      pdf.setTextColor(50, 50, 50);
-      pdf.text(item.category, margin + 3, startY);
-      pdf.text(CryptoUtils.formatCurrency(item.limit), margin + 60, startY);
-      pdf.text(CryptoUtils.formatCurrency(item.spent), margin + 95, startY);
-
-      // Colore basato su utilizzo
-      const pct = item.utilizationPct;
-      if (pct >= 100) {
-        pdf.setTextColor(200, 53, 50); // Rosso
-      } else if (pct >= 80) {
-        pdf.setTextColor(200, 122, 0); // Arancio
-      } else {
-        pdf.setTextColor(30, 123, 75); // Verde
-      }
-
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(`${pct.toFixed(1)}%`, margin + 125, startY);
-      pdf.setFont('helvetica', 'normal');
-
-      startY += 6;
-    });
-  }
-
-  /**
-   * ✅ LOG COMPLETO TRANSAZIONI
-   */
-  addFullLog(pdf, reportData, pageWidth, startY) {
-    const margin = 15;
-    const contentWidth = pageWidth - 2 * margin;
-
-    pdf.setFontSize(14);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(26, 26, 26);
-    pdf.text('Log Completo Transazioni', margin, startY);
-
-    startY += 12;
-
-    // Header tabella
-    pdf.setFontSize(8);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(100, 100, 100);
-    pdf.setFillColor(248, 248, 248);
-    pdf.rect(margin, startY, contentWidth, 6, 'F');
-
-    pdf.text('Data', margin + 2, startY + 4);
-    pdf.text('Categoria', margin + 25, startY + 4);
-    pdf.text('Descrizione', margin + 60, startY + 4);
-    pdf.text('Importo', margin + 120, startY + 4);
-
+    pdf.setFontSize(12);
+    pdf.setTextColor(20, 20, 20);
+    pdf.text('Dettaglio movimenti registrati', mL, startY);
     startY += 8;
 
-    // Righe spese
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(50, 50, 50);
+    // ── Funzione disegno header colonne ──
+    const drawTableHeader = (y) => {
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(mL, y - 4, contW, 6.5, 'F');
 
-    const pageHeight = pdf.internal.pageSize.getHeight();
-
-    reportData.expenses.forEach((exp, idx) => {
-      if (startY > pageHeight - 25) {
-        pdf.addPage();
-        startY = margin;
-      }
-
-      // Sfondo alternato
-      if (idx % 2 === 0) {
-        pdf.setFillColor(252, 252, 252);
-        pdf.rect(margin, startY - 2.5, contentWidth, 5, 'F');
-      }
-
-      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
       pdf.setTextColor(50, 50, 50);
 
+      pdf.text('Data',         mL + 2,         y);
+      pdf.text('Categoria',    mL + 26,         y);
+      pdf.text('Descrizione',  mL + 68,         y);
+      pdf.text('Importo (€)',  mL + contW - 2,  y, { align: 'right' });
+
+      pdf.setDrawColor(160, 160, 160);
+      pdf.setLineWidth(0.3);
+      pdf.line(mL, y + 2.5, mL + contW, y + 2.5);
+
+      return y + 6;
+    };
+
+    startY = drawTableHeader(startY);
+
+    // ── Righe spese ──
+    expenses.forEach((exp, idx) => {
+      // Spazio necessario: riga + eventuale totale se è l'ultima riga
+      const isLast    = idx === expenses.length - 1;
+      const neededH   = rowH + (isLast ? totalH : 0);
+
+      if (startY + neededH > pageH - mBot - footerH) {
+        pdf.addPage();
+        startY = this.addHeader(pdf, reportData, pageW, mL, mR, mTop);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(12);
+        pdf.setTextColor(20, 20, 20);
+        pdf.text('Dettaglio movimenti registrati', mL, startY);
+        startY += 8;
+        startY = drawTableHeader(startY);
+      }
+
+      // Sfondo riga alternato
+      if (idx % 2 === 0) {
+        pdf.setFillColor(251, 251, 251);
+        pdf.rect(mL, startY - 3.5, contW, rowH, 'F');
+      }
+
+      // Linea riga
+      pdf.setDrawColor(230, 230, 230);
+      pdf.setLineWidth(0.15);
+      pdf.line(mL, startY + 2.5, mL + contW, startY + 2.5);
+
+      // Contenuto — 9pt
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.setTextColor(40, 40, 40);
+
       const date = new Date(exp.date).toLocaleDateString('it-IT', {
-        day: '2-digit',
-        month: '2-digit'
+        day: '2-digit', month: '2-digit', year: 'numeric'
       });
 
-      const categoryName = exp.category.replace(/^[\p{Emoji}]+\s*/u, '');
-      const expName = exp.name.substring(0, 40);
+      const cat = (exp.category || 'Altro')
+        .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
+        .replace(/[\u{2600}-\u{27BF}]/gu, '')
+        .trim()
+        .substring(0, 20);
 
-      pdf.text(date, margin + 2, startY);
-      pdf.text(categoryName, margin + 25, startY);
-      pdf.text(expName, margin + 60, startY);
-      pdf.text(CryptoUtils.formatCurrency(exp.amount), margin + 120, startY);
+      const desc   = (exp.name || '').substring(0, 38);
+      const amount = this.formatAmount(exp.amount);
 
-      startY += 5;
+      pdf.text(date,   mL + 2,         startY);
+      pdf.text(cat,    mL + 26,        startY);
+      pdf.text(desc,   mL + 68,        startY);
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(amount, mL + contW - 2, startY, { align: 'right' });
+
+      startY += rowH;
+
+      // ── TOTALE — solo dopo l'ultima riga ──
+      if (isLast) {
+        startY += 4; // respiro prima del totale
+
+        // Linea sopra il totale
+        pdf.setDrawColor(180, 180, 180);
+        pdf.setLineWidth(0.4);
+        pdf.line(mL, startY, mL + contW, startY);
+
+        startY += 5;
+
+        // Mini-tabella invisibile a 2 colonne:
+        // [spazio vuoto] | [Totale spese: € xxx]
+        const totalLabel  = 'Totale spese:';
+        const totalValue  = `\u20AC ${this.formatAmount(reportData.stats.total)}`;
+
+        // Label — 10pt bold
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.setTextColor(20, 20, 20);
+        pdf.text(totalLabel, mL + contW - 52, startY);
+
+        // Valore — 11pt bold, allineato a destra con la colonna importo
+        pdf.setFontSize(11);
+        pdf.text(totalValue, mL + contW - 2, startY, { align: 'right' });
+      }
     });
   }
 
   /**
-   * ✅ FOOTER MIGLIORATO CON NUMERO PAGINA
+   * Formatta importo: € 1.234,56
+   * Usa metodo nativo per evitare problemi encoding
    */
-  addFooter(pdf, reportData, pageWidth, pageHeight, pageNum, totalPages) {
-    pdf.setFontSize(8);
-    pdf.setTextColor(150, 150, 150);
-    
-    const footerY = pageHeight - 10;
-    const centerX = pageWidth / 2;
-
-    // Numero pagina al centro
-    pdf.text(`Pagina ${pageNum} di ${totalPages}`, centerX, footerY, { align: 'center' });
-
-    // BudgeIT a sinistra
-    pdf.setFontSize(7);
-    pdf.setTextColor(180, 180, 180);
-    pdf.text('BudgeIT v0.3', 15, footerY);
-
-    // Profilo a destra
-    pdf.text(reportData.profileName, pageWidth - 15, footerY, { align: 'right' });
-
-    // Linea decorativa
-    pdf.setDrawColor(220, 220, 220);
-    pdf.setLineWidth(0.5);
-    pdf.line(15, pageHeight - 12, pageWidth - 15, pageHeight - 12);
+  formatAmount(amount) {
+    const num = Number(amount || 0);
+    return num.toLocaleString('it-IT', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   }
 
   /**
-   * Crea schermata di progress
+   * FOOTER — presente su tutte le pagine
+   * Sinistra: testo generazione + profilo
+   * Destra: Pagina X di N
+   */
+  addFooter(pdf, reportData, pageW, pageH, mL, mR, pageNum, totalPages) {
+    const footerY = pageH - 10;
+
+    // Linea superiore footer
+    pdf.setDrawColor(210, 210, 210);
+    pdf.setLineWidth(0.3);
+    pdf.line(mL, footerY - 5, pageW - mR, footerY - 5);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.setTextColor(160, 160, 160);
+
+    // Sinistra
+    pdf.text(
+      `Documento generato da BudgeIT per ${reportData.profileName}`,
+      mL, footerY
+    );
+
+    // Destra
+    pdf.text(
+      `Pagina ${pageNum} di ${totalPages}`,
+      pageW - mR, footerY,
+      { align: 'right' }
+    );
+  }
+
+  /**
+   * Crea schermata di progress — minimal, indeterminata
    */
   createProgressScreen() {
     const overlay = document.createElement('div');
@@ -524,43 +352,18 @@ class ReportGenerator {
     overlay.className = 'report-progress-screen show';
     overlay.innerHTML = `
       <div class="report-progress-content">
-        <div class="report-progress-header">
-          <div class="report-progress-title">Generazione Report</div>
-          <div class="report-progress-subtitle">Preparazione documento finanziario</div>
-        </div>
-
-        <div class="report-progress-body">
-          <div class="report-progress-indicator">
-            <div class="report-progress-bar">
-              <div class="report-progress-fill" id="report-progress-fill" style="width: 0%"></div>
-            </div>
-            <div class="report-progress-percentage" id="report-progress-percentage">0%</div>
-          </div>
-
-          <div class="report-progress-message" id="report-progress-message">
-            Preparazione documento...
-          </div>
-        </div>
-
-        <div class="report-progress-footer">
-          <div class="report-progress-microcopy">
-            BudgeIT v0.3 • Report Generator
-          </div>
+        <div class="report-progress-title">Generazione documento finanziario</div>
+        <div class="report-progress-subtitle">Stiamo preparando il documento.<br>Attendere qualche istante.</div>
+        <div class="report-progress-track">
+          <div class="report-progress-runner"></div>
         </div>
       </div>
     `;
-
     return overlay;
   }
 
   updateProgress(screen, message, percentage) {
-    const fill = screen.querySelector('#report-progress-fill');
-    const msg = screen.querySelector('#report-progress-message');
-    const pct = screen.querySelector('#report-progress-percentage');
-
-    if (fill) fill.style.width = `${percentage}%`;
-    if (msg) msg.textContent = message;
-    if (pct) pct.textContent = `${percentage}%`;
+    // Mantenuto per compatibilità, non usato nel nuovo design
   }
 
   delay(ms) {

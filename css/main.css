@@ -2645,20 +2645,20 @@ body {
    REPORT PROGRESS SCREEN - FULL SCREEN
    ======================================== */
 
+/* ── PROGRESS SCREEN — minimal, indeterminata ── */
 .report-progress-screen {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--bg-elevated) 100%);
+  background: var(--bg-primary);
   display: none;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  backdrop-filter: blur(10px);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .report-progress-screen.show {
@@ -2668,75 +2668,55 @@ body {
 
 .report-progress-content {
   width: 100%;
-  max-width: 400px;
-  padding: 40px 24px;
+  max-width: 320px;
+  padding: 0 32px;
   text-align: center;
-}
-
-.report-progress-header {
-  margin-bottom: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .report-progress-title {
-  font-size: 28px;
-  font-weight: 600;
-  color: #FFFFFF;
-  margin-bottom: 8px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-bottom: 12px;
 }
 
 .report-progress-subtitle {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-tertiary);
+  line-height: 1.6;
+  margin-bottom: 40px;
 }
 
-.report-progress-body {
-  margin-bottom: 48px;
-}
-
-.report-progress-indicator {
-  position: relative;
-  margin-bottom: 24px;
-}
-
-.report-progress-bar {
+/* Traccia della barra */
+.report-progress-track {
   width: 100%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-pill);
+  height: 4px;
+  background: var(--bg-divider);
+  border-radius: 999px;
   overflow: hidden;
+  position: relative;
 }
 
-.report-progress-fill {
+/* Elemento che scorre — animazione indeterminata */
+.report-progress-runner {
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 40%;
   height: 100%;
-  background: linear-gradient(90deg, #1A1A1A 0%, #505050 100%);
-  border-radius: var(--radius-pill);
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--text-primary);
+  border-radius: 999px;
+  animation: progressSlide 1.4s linear infinite;
 }
 
-.report-progress-percentage {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 8px;
-  font-weight: 500;
-}
-
-.report-progress-message {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.4;
-  letter-spacing: -0.01em;
-}
-
-.report-progress-footer {
-  margin-top: 32px;
-}
-
-.report-progress-microcopy {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+@keyframes progressSlide {
+  0%   { left: -40%; }
+  100% { left: 100%; }
 }
 
 /* ========================================

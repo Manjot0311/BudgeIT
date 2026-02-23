@@ -45,14 +45,6 @@ const reportsView = {
               <div class="report-period-label">Intervallo</div>
               <div class="report-period-sub">personalizzato</div>
             </button>
-            <button class="report-period-btn" data-period="ytd">
-              <div class="report-period-label">YTD</div>
-              <div class="report-period-sub">anno da oggi</div>
-            </button>
-            <button class="report-period-btn" data-period="fiscal-year">
-              <div class="report-period-label">Fiscale</div>
-              <div class="report-period-sub">anno contabile</div>
-            </button>
           </div>
 
           <!-- Selezione date (mostrate solo se rilevante) -->
@@ -66,41 +58,6 @@ const reportsView = {
               <input type="date" id="report-start-date" class="input-field">
               <label class="report-label" style="margin-top:12px;">Data fine</label>
               <input type="date" id="report-end-date" class="input-field">
-            </div>
-          </div>
-        </div>
-
-        <div class="report-section">
-          <div class="report-section-title">Contenuti da includere</div>
-
-          <div class="report-checklist">
-            <div class="report-checkbox-item">
-              <input type="checkbox" id="check-full-log" checked>
-              <label for="check-full-log">
-                <span class="check-label">Log completo transazioni</span>
-                <span class="check-sub">Dettaglio di tutte le spese</span>
-              </label>
-            </div>
-            <div class="report-checkbox-item">
-              <input type="checkbox" id="check-category-analysis" checked>
-              <label for="check-category-analysis">
-                <span class="check-label">Analisi per categoria</span>
-                <span class="check-sub">Suddivisione spese e percentuali</span>
-              </label>
-            </div>
-            <div class="report-checkbox-item">
-              <input type="checkbox" id="check-budget-analysis" checked>
-              <label for="check-budget-analysis">
-                <span class="check-label">Analisi budget</span>
-                <span class="check-sub">Confronto budget vs speso</span>
-              </label>
-            </div>
-            <div class="report-checkbox-item">
-              <input type="checkbox" id="check-charts" disabled title="Disponibile in v0.4">
-              <label for="check-charts" style="opacity:0.5;">
-                <span class="check-label">Grafici e trend</span>
-                <span class="check-sub">Visualizzazioni (v0.4)</span>
-              </label>
             </div>
           </div>
         </div>
@@ -166,19 +123,6 @@ const reportsView = {
     root.querySelector('#report-end-date')?.addEventListener('change', (e) => {
       reportsConfig.setConfig({ endDate: e.target.value });
       this.updatePreview();
-    });
-
-    // Checkbox
-    root.querySelector('#check-full-log')?.addEventListener('change', (e) => {
-      reportsConfig.setConfig({ includeFullLog: e.target.checked });
-    });
-
-    root.querySelector('#check-category-analysis')?.addEventListener('change', (e) => {
-      reportsConfig.setConfig({ includeCategoryAnalysis: e.target.checked });
-    });
-
-    root.querySelector('#check-budget-analysis')?.addEventListener('change', (e) => {
-      reportsConfig.setConfig({ includeBudgetAnalysis: e.target.checked });
     });
 
     // Genera report
