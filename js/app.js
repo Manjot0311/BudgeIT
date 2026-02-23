@@ -45,7 +45,7 @@ class BudgeITApp {
     router.navigate('home');
   }
 
-  /* ===================== THEME ===================== */
+    /* ===================== THEME ===================== */
   applyTheme(theme) {
     const actual = theme === 'auto'
       ? window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'

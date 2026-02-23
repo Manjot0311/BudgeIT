@@ -20,6 +20,7 @@ const settingsModal = {
     const modalEl = document.getElementById('settings-modal');
     if (modalEl) modalEl.classList.remove('show');
     this.isOpen = false;
+    this.closeAllPopups();
   },
 
   refresh() {
@@ -71,7 +72,7 @@ const settingsModal = {
         </div>
         <div class="settings-profile-card-info">
           <div class="settings-profile-card-name">${app.escapeHtml(activeProfile?.name || 'Profilo')}</div>
-          <div class="settings-profile-card-subtitle">Rinomina Profilo</div>
+          <div class="settings-profile-card-subtitle">Visualizza dettagli profilo</div>
         </div>
         <button class="settings-profile-card-chevron" onclick="App.renameProfileUI(); App.UI.settingsModal.refresh();">›</button>
       </div>
@@ -100,8 +101,8 @@ const settingsModal = {
           </div>
         </div>
 
-        <!-- Dati -->
-        <button class="settings-item-with-icon settings-item-button" onclick="App.UI.settingsModal.openDataSection()">
+        <!-- Dati - POPUP MENU -->
+        <button class="settings-item-with-icon settings-item-button" id="data-menu-btn" onclick="App.UI.settingsModal.openDataMenu(event)">
           <div class="settings-item-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="1"></circle>
@@ -145,7 +146,7 @@ const settingsModal = {
         </button>
 
         <!-- Privacy e Sicurezza -->
-        <button class="settings-item-with-icon settings-item-button" onclick="App.UI.settingsModal.openPrivacySection()">
+        <button class="settings-item-with-icon settings-item-button" id="privacy-menu-btn" onclick="App.UI.settingsModal.openPrivacyMenu(event)">
           <div class="settings-item-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -159,8 +160,9 @@ const settingsModal = {
         <button class="settings-item-with-icon settings-item-button settings-item-danger" onclick="App.switchProfileFromSettings()">
           <div class="settings-item-icon settings-item-icon-danger">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 3 5 7 9 11"></polyline>
-              <path d="M20 20H7a2 2 0 0 1-2-2V9"></path>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
             </svg>
           </div>
           <div class="settings-item-label settings-item-label-danger">Esci</div>
@@ -169,74 +171,40 @@ const settingsModal = {
       </div>
 
       <!-- ══════════════════════════════════════════════════════
-           HIDDEN SECTIONS (Aperte dinamicamente)
+           POPUP MENUS - DENTRO LA MODALE
            ══════════════════════════════════════════════════════ -->
-      
-      <!-- Sezione Dati (nascosta) -->
-      <div id="data-section" style="display:none;">
-        <div class="settings-section-header">
-          <button class="settings-back-button" onclick="App.UI.settingsModal.closeDataSection()">‹</button>
-          <div class="settings-section-title">Dati</div>
-          <div style="width:36px"></div>
-        </div>
+      <div id="settings-popup-backdrop" class="settings-popup-backdrop" onclick="App.UI.settingsModal.closeAllPopups();"></div>
 
-        <div class="settings-section">
-          <button class="settings-item-with-icon settings-item-button" onclick="App.exportDataUI()">
-            <div class="settings-item-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-            </div>
-            <div class="settings-item-label">Esporta dati</div>
-            <span class="settings-item-chevron">›</span>
-          </button>
-
-          <button class="settings-item-with-icon settings-item-button" onclick="document.getElementById('import-file').click()">
-            <div class="settings-item-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
-            </div>
-            <div class="settings-item-label">Importa dati</div>
-            <span class="settings-item-chevron">›</span>
-          </button>
-
-          <input type="file" id="import-file" accept=".json"
-                 style="display:none"
-                 onchange="App.importDataUI(event)">
-        </div>
+      <div id="data-popup-menu" class="settings-popup-menu">
+        <button class="settings-popup-item" onclick="App.exportDataUI(); App.UI.settingsModal.closeAllPopups();">
+          <div class="settings-popup-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </div>
+          <span class="settings-popup-label">Esporta dati</span>
+        </button>
+        <button class="settings-popup-item" onclick="document.getElementById('import-file').click(); App.UI.settingsModal.closeAllPopups();">
+          <div class="settings-popup-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <span class="settings-popup-label">Importa dati</span>
+        </button>
+        <input type="file" id="import-file" accept=".json"
+               style="display:none"
+               onchange="App.importDataUI(event)">
       </div>
 
-      <!-- Sezione Privacy (nascosta) -->
-      <div id="privacy-section" style="display:none;">
-        <div class="settings-section-header">
-          <button class="settings-back-button" onclick="App.UI.settingsModal.closePrivacySection()">‹</button>
-          <div class="settings-section-title">Privacy e Sicurezza</div>
-          <div style="width:36px"></div>
-        </div>
-
-        <div class="settings-section">
-          ${activeProfile?.pin ? `
-            <button class="settings-item-with-icon settings-item-button settings-item-danger" onclick="App.removePinUI(); App.UI.settingsModal.refresh();">
-              <div class="settings-item-icon settings-item-icon-danger">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  <line x1="10" y1="11" x2="10" y2="17"></line>
-                  <line x1="14" y1="11" x2="14" y2="17"></line>
-                </svg>
-              </div>
-              <div class="settings-item-label settings-item-label-danger">Rimuovi PIN</div>
-              <span class="settings-item-chevron">›</span>
-            </button>
-          ` : ''}
-
-          <button class="settings-item-with-icon settings-item-button settings-item-danger" onclick="App.deleteProfileUI()">
-            <div class="settings-item-icon settings-item-icon-danger">
+      <div id="privacy-popup-menu" class="settings-popup-menu">
+        ${activeProfile?.pin ? `
+          <button class="settings-popup-item settings-popup-item-danger" onclick="App.removePinUI(); App.UI.settingsModal.refresh(); App.UI.settingsModal.closeAllPopups();">
+            <div class="settings-popup-icon settings-popup-icon-danger">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -244,10 +212,21 @@ const settingsModal = {
                 <line x1="14" y1="11" x2="14" y2="17"></line>
               </svg>
             </div>
-            <div class="settings-item-label settings-item-label-danger">Elimina profilo</div>
-            <span class="settings-item-chevron">›</span>
+            <span class="settings-popup-label settings-popup-label-danger">Rimuovi PIN</span>
           </button>
-        </div>
+        ` : ''}
+
+        <button class="settings-popup-item settings-popup-item-danger" onclick="App.deleteProfileUI(); App.UI.settingsModal.closeAllPopups();">
+          <div class="settings-popup-icon settings-popup-icon-danger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+          </div>
+          <span class="settings-popup-label settings-popup-label-danger">Elimina profilo</span>
+        </button>
       </div>
     `;
   },
@@ -275,25 +254,46 @@ const settingsModal = {
     return (name || 'P').charAt(0).toUpperCase();
   },
 
-  // Gestione sezioni nascoste
-  openDataSection() {
-    document.querySelector('.modal-content > div:not(#data-section)').style.display = 'none';
-    document.getElementById('data-section').style.display = 'block';
+  // ════════════════════════════════════════════════════════════
+  // POPUP MENU HANDLERS
+  // ════════════════════════════════════════════════════════════
+
+  openDataMenu(event) {
+    event.stopPropagation();
+    this.closeAllPopups();
+    
+    const menu = document.getElementById('data-popup-menu');
+    const backdrop = document.getElementById('settings-popup-backdrop');
+    const btn = document.getElementById('data-menu-btn');
+    
+    if (menu && backdrop && btn) {
+      menu.classList.add('show');
+      backdrop.classList.add('show');
+    }
   },
 
-  closeDataSection() {
-    document.getElementById('data-section').style.display = 'none';
-    document.querySelector('.modal-content > div:not(#data-section)').style.display = 'block';
+  openPrivacyMenu(event) {
+    event.stopPropagation();
+    this.closeAllPopups();
+    
+    const menu = document.getElementById('privacy-popup-menu');
+    const backdrop = document.getElementById('settings-popup-backdrop');
+    const btn = document.getElementById('privacy-menu-btn');
+    
+    if (menu && backdrop && btn) {
+      menu.classList.add('show');
+      backdrop.classList.add('show');
+    }
   },
 
-  openPrivacySection() {
-    document.querySelector('.modal-content > div:not(#privacy-section)').style.display = 'none';
-    document.getElementById('privacy-section').style.display = 'block';
-  },
-
-  closePrivacySection() {
-    document.getElementById('privacy-section').style.display = 'none';
-    document.querySelector('.modal-content > div:not(#privacy-section)').style.display = 'block';
+  closeAllPopups() {
+    const dataMenu = document.getElementById('data-popup-menu');
+    const privacyMenu = document.getElementById('privacy-popup-menu');
+    const backdrop = document.getElementById('settings-popup-backdrop');
+    
+    if (dataMenu) dataMenu.classList.remove('show');
+    if (privacyMenu) privacyMenu.classList.remove('show');
+    if (backdrop) backdrop.classList.remove('show');
   }
 };
 
