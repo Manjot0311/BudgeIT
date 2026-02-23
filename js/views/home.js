@@ -24,7 +24,52 @@ const homeView = {
 
     this.updateStats();
     this.renderRecentExpenses();
+    
+    // ← NUOVO: Crea il menu FUORI da #app
+    this.createActionMenuInRoot();
+    
     this.setupActionMenu();
+  },
+
+  // ← NUOVO METODO: Crea il menu nel modals-root (fuori da #app)
+  createActionMenuInRoot() {
+    let menu = document.getElementById('action-menu');
+    
+    // Se esiste già, rimuovilo
+    if (menu) menu.remove();
+
+    const modalsRoot = document.getElementById('modals-root');
+    if (!modalsRoot) return;
+
+    menu = document.createElement('div');
+    menu.id = 'action-menu';
+    menu.className = 'home-action-menu';
+    menu.innerHTML = `
+      <button class="home-action-menu-item" onclick="App.switchView('expenses')">
+        <span class="home-action-menu-icon">✎</span>
+        <span class="home-action-menu-label">Registra nuova spesa</span>
+      </button>
+      <button class="home-action-menu-item" onclick="App.switchView('reports')">
+        <span class="home-action-menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+            <!-- Documento -->
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            
+            <!-- Linee testo -->
+            <line x1="9" y1="11" x2="15" y2="11"></line>
+            <line x1="9" y1="15" x2="15" y2="15"></line>
+            
+            <!-- PDF badge rosso -->
+            <rect x="9" y="17" width="6" height="4" rx="0.5" fill="currentColor"></rect>
+            <text x="12" y="20.5" text-anchor="middle" font-size="2" font-weight="bold" fill="white">PDF</text>
+          </svg>
+        </span>
+        <span class="home-action-menu-label">Genera Report PDF</span>
+      </button>
+    `;
+    
+    modalsRoot.appendChild(menu);
   },
 
   getHTML() {
@@ -97,7 +142,7 @@ const homeView = {
 
         <!-- AZIONI RAPIDE - Stile iPhone Dock -->
         <div class="home-actions-dock">
-                   <button class="home-action-dock-item" onclick="App.switchView('stats')" title="Statistiche">
+          <button class="home-action-dock-item" onclick="App.switchView('stats')" title="Statistiche">
             <!-- GRAFICO ANALYTICS - ESATTO COME L'IMMAGINE -->
             <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
               <!-- Trend line con 4 punti -->
@@ -119,7 +164,7 @@ const homeView = {
             <span class="home-action-plus">+</span>
           </button>
 
-                    <button class="home-action-dock-item" onclick="App.switchView('budget')" title="Budget">
+          <button class="home-action-dock-item" onclick="App.switchView('budget')" title="Budget">
             <!-- BUDGET - MANO CON MONETE E FRECCIA SU - ALLINEATO -->
             <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
               <!-- Freccia su (up arrow) -->
@@ -136,32 +181,6 @@ const homeView = {
               <text x="35" y="61" text-anchor="middle" font-size="20" font-weight="bold" stroke="none" fill="currentColor">$</text>
 
             </svg>
-          </button>
-        </div>
-
-        <!-- MENU AZIONI RAPIDE (nascosto di default) -->
-        <div class="home-action-menu" id="action-menu">
-          <button class="home-action-menu-item" onclick="App.switchView('expenses')">
-            <span class="home-action-menu-icon">✎</span>
-            <span class="home-action-menu-label">Registra nuova spesa</span>
-          </button>
-          <button class="home-action-menu-item" onclick="App.switchView('reports')">
-            <span class="home-action-menu-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
-                <!-- Documento -->
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                
-                <!-- Linee testo -->
-                <line x1="9" y1="11" x2="15" y2="11"></line>
-                <line x1="9" y1="15" x2="15" y2="15"></line>
-                
-                <!-- PDF badge rosso -->
-                <rect x="9" y="17" width="6" height="4" rx="0.5" fill="currentColor"></rect>
-                <text x="12" y="20.5" text-anchor="middle" font-size="2" font-weight="bold" fill="white">PDF</text>
-              </svg>
-            </span>
-            <span class="home-action-menu-label">Genera Report PDF</span>
           </button>
         </div>
 
@@ -258,17 +277,16 @@ const homeView = {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       
-      // Toggle: mostra/nascondi menu
       const isOpen = menu.classList.contains('show');
       
       if (isOpen) {
-        // Chiudi
         menu.classList.remove('show');
         btn.classList.remove('open');
+        this.removeFullScreenBackdrop();
       } else {
-        // Apri
         menu.classList.add('show');
         btn.classList.add('open');
+        this.addFullScreenBackdrop();
       }
     });
 
@@ -277,6 +295,7 @@ const homeView = {
       if (!btn.contains(e.target) && !menu.contains(e.target)) {
         menu.classList.remove('show');
         btn.classList.remove('open');
+        this.removeFullScreenBackdrop();
       }
     });
 
@@ -286,9 +305,44 @@ const homeView = {
         setTimeout(() => {
           menu.classList.remove('show');
           btn.classList.remove('open');
+          this.removeFullScreenBackdrop();
         }, 100);
       });
     });
+  },
+
+  addFullScreenBackdrop() {
+    let backdrop = document.getElementById('fullscreen-backdrop');
+    if (backdrop) return;
+
+    backdrop = document.createElement('div');
+    backdrop.id = 'fullscreen-backdrop';
+    backdrop.className = 'fullscreen-backdrop show';
+    document.body.insertBefore(backdrop, document.body.firstChild);
+
+    // Sfoca tutto lo schermo
+    const app = document.getElementById('app');
+    if (app) app.classList.add('blurred');
+
+    backdrop.addEventListener('click', () => {
+      const menu = document.getElementById('action-menu');
+      const btn = document.getElementById('action-menu-btn');
+      if (menu) menu.classList.remove('show');
+      if (btn) btn.classList.remove('open');
+      this.removeFullScreenBackdrop();
+    });
+  },
+
+  removeFullScreenBackdrop() {
+    const backdrop = document.getElementById('fullscreen-backdrop');
+    const app = document.getElementById('app');
+
+    if (backdrop) {
+      backdrop.classList.remove('show');
+      setTimeout(() => backdrop.remove(), 300);
+    }
+
+    if (app) app.classList.remove('blurred');
   },
 
   updateStats() {

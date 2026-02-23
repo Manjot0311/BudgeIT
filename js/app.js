@@ -871,8 +871,8 @@ class BudgeITApp {
     if (dateEl)     dateEl.value     = today;
     if (notesEl)    notesEl.value    = '';
 
-    router.routes.expenses?.renderExpenseList?.();
-    router.routes.home?.updateStats?.();
+    router.routes['expenses']?.renderExpenseList?.();
+    router.routes['home']?.updateStats?.();
     this.showToast('Spesa salvata');
   }
 
@@ -884,8 +884,8 @@ class BudgeITApp {
       cancelText:  'Annulla',
       onConfirm:   () => {
         storage.deleteExpense(id);
-        router.routes.expenses?.renderExpenseList?.();
-        router.routes.home?.updateStats?.();
+        router.routes['expenses']?.renderExpenseList?.();
+        router.routes['home']?.updateStats?.();
         this.showToast('Spesa eliminata');
       }
     });
@@ -897,6 +897,88 @@ class BudgeITApp {
     if (!stats) return;
     stats.currentMonth.setMonth(stats.currentMonth.getMonth() + delta);
     stats.update();
+  }
+
+  /* ===================== EXPORT/IMPORT DATA ===================== */
+
+  exportDataUI() {
+    const profile = storage.getActiveProfile();
+    if (!profile) {
+      this.showAlert('Errore', 'Nessun profilo attivo');
+      return;
+    }
+
+    // Crea un oggetto con i dati del profilo
+    const dataToExport = {
+      profileName: profile.name,
+      exportDate: new Date().toISOString(),
+      expenses: profile.expenses,
+      categories: profile.categories,
+      budgets: profile.budgets,
+      settings: profile.settings
+    };
+
+    // Converti in JSON
+    const jsonString = JSON.stringify(dataToExport, null, 2);
+
+    // Crea un blob
+    const blob = new Blob([jsonString], { type: 'application/json' });
+
+    // Crea l'URL per il download
+    const url = URL.createObjectURL(blob);
+
+    // Crea un link e simula il click
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `BudgeIT_${profile.name}_${new Date().toISOString().slice(0, 10)}.json`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Libera la memoria
+    URL.revokeObjectURL(url);
+
+    this.showToast('Dati esportati con successo');
+  }
+
+  importDataUI(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        const profile = storage.getActiveProfile();
+
+        if (!profile) {
+          this.showAlert('Errore', 'Nessun profilo attivo');
+          return;
+        }
+
+        // Merge dei dati
+        profile.expenses = [...(profile.expenses || []), ...(data.expenses || [])];
+        profile.categories = [...new Set([...(profile.categories || []), ...(data.categories || [])])];
+        profile.budgets = { ...profile.budgets, ...data.budgets };
+        profile.settings = { ...profile.settings, ...data.settings };
+
+        storage.save();
+
+        router.routes['home']?.updateStats?.();
+        router.routes['expenses']?.renderExpenseList?.();
+
+        this.showToast('Dati importati con successo');
+
+        // Reset input
+        event.target.value = '';
+      } catch (err) {
+        this.showAlert('Errore', 'File non valido');
+        console.error(err);
+      }
+    };
+
+    reader.readAsText(file);
   }
 
   /* ===================== UTIL ===================== */
