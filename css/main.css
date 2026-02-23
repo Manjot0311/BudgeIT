@@ -2479,24 +2479,18 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
 }
 
 .report-period-btn {
   background: var(--bg-surface);
   border: 1px solid var(--bg-divider);
   border-radius: var(--radius-lg);
-  padding: 16px 8px;
+  padding: 16px 12px;
   text-align: center;
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
   color: var(--text-primary);
-  min-width: 0;
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
 }
 
 .report-period-btn:hover {
@@ -4529,10 +4523,14 @@ body.no-scroll {
 /* Garantisci che tutti gli input abbiano la stessa altezza */
 .input-field,
 .select-field,
-#expense-date {
+#expense-date,
+input[type="month"] {
   min-height: 50px;
   display: block;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* Evita che il campo data abbia padding diverso */
@@ -4672,8 +4670,11 @@ input[type="date"] {
 
 input[type="date"],
 input[type="time"],
-input[type="datetime-local"] {
+input[type="datetime-local"],
+input[type="month"] {
     width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
     padding: 14px 16px !important;
     background: var(--bg-surface) !important;
     border: 1px solid var(--bg-divider) !important;
@@ -4689,6 +4690,8 @@ input[type="datetime-local"] {
     height: auto !important;
     min-height: 50px !important;
     line-height: 1.5 !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
 }
 
 /* Icona calendario - miglior posizionamento */
@@ -4703,7 +4706,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 /* Focus state */
 input[type="date"]:focus,
 input[type="time"]:focus,
-input[type="datetime-local"]:focus {
+input[type="datetime-local"]:focus,
+input[type="month"]:focus {
     outline: none !important;
     border-color: var(--accent) !important;
     box-shadow: 0 0 0 3px var(--accent-hover) !important;
@@ -4719,7 +4723,8 @@ input[type="datetime-local"]::placeholder {
 /* Dark mode */
 [data-theme="dark"] input[type="date"],
 [data-theme="dark"] input[type="time"],
-[data-theme="dark"] input[type="datetime-local"] {
+[data-theme="dark"] input[type="datetime-local"],
+[data-theme="dark"] input[type="month"] {
     background: var(--bg-surface) !important;
     border-color: var(--bg-divider) !important;
     color: var(--text-primary) !important;
@@ -4734,7 +4739,8 @@ input[type="datetime-local"]::placeholder {
 @media (max-width: 480px) {
     input[type="date"],
     input[type="time"],
-    input[type="datetime-local"] {
+    input[type="datetime-local"],
+    input[type="month"] {
         padding: 14px 12px !important;
         font-size: 16px !important;
     }
