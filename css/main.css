@@ -2477,8 +2477,8 @@ body {
 /* Period buttons grid */
 .report-period-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
 }
 
 .report-period-btn {
