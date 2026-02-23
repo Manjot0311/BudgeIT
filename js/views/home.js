@@ -183,7 +183,6 @@ const homeView = {
             </svg>
           </button>
         </div>
-
       </div>
     `;
   },
