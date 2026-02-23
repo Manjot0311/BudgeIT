@@ -25,10 +25,58 @@ const homeView = {
     this.updateStats();
     this.renderRecentExpenses();
     
+    // Crea il dock FUORI da #app (così non viene mai sfocato)
+    this.createDockInRoot();
+
     // ← NUOVO: Crea il menu FUORI da #app
     this.createActionMenuInRoot();
     
     this.setupActionMenu();
+  },
+
+  // Crea il dock nel modals-root (fuori da #app, mai sfocato)
+  createDockInRoot() {
+    let dock = document.querySelector('.home-actions-dock');
+    if (dock) dock.remove();
+
+    const modalsRoot = document.getElementById('modals-root');
+    if (!modalsRoot) return;
+
+    dock = document.createElement('div');
+    dock.className = 'home-actions-dock';
+    dock.innerHTML = `
+      <button class="home-action-dock-item" onclick="App.switchView('stats')" title="Statistiche">
+        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="15" cy="50" r="5"></circle>
+          <circle cx="40" cy="18" r="5"></circle>
+          <circle cx="60" cy="33" r="5"></circle>
+          <circle cx="85" cy="5" r="5"></circle>
+          <polyline points="15,50 40,18 60,33 85,5"></polyline>
+          <rect x="10" y="65" width="12" height="15" rx="3" ry="3"></rect>
+          <rect x="32" y="55" width="12" height="25" rx="3" ry="3"></rect>
+          <rect x="54" y="42" width="12" height="38" rx="3" ry="3"></rect>
+          <rect x="76" y="28" width="12" height="52" rx="3" ry="3"></rect>
+        </svg>
+      </button>
+
+      <button class="home-action-dock-center" id="action-menu-btn">
+        <span class="home-action-plus">+</span>
+      </button>
+
+      <button class="home-action-dock-item" onclick="App.switchView('budget')" title="Budget">
+        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M 50 8 L 50 28"></path>
+          <polyline points="40 18 50 8 60 18"></polyline>
+          <rect x="55" y="32" width="35" height="10" rx="3" ry="3"></rect>
+          <rect x="55" y="45" width="35" height="10" rx="3" ry="3"></rect>
+          <rect x="55" y="58" width="35" height="10" rx="3" ry="3"></rect>
+          <circle cx="35" cy="55" r="18" stroke-width="5"></circle>
+          <text x="35" y="61" text-anchor="middle" font-size="20" font-weight="bold" stroke="none" fill="currentColor">$</text>
+        </svg>
+      </button>
+    `;
+
+    modalsRoot.appendChild(dock);
   },
 
   // ← NUOVO METODO: Crea il menu nel modals-root (fuori da #app)
@@ -46,23 +94,21 @@ const homeView = {
     menu.className = 'home-action-menu';
     menu.innerHTML = `
       <button class="home-action-menu-item" onclick="App.switchView('expenses')">
-        <span class="home-action-menu-icon">✎</span>
+        <span class="home-action-menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </span>
         <span class="home-action-menu-label">Registra nuova spesa</span>
       </button>
       <button class="home-action-menu-item" onclick="App.switchView('reports')">
         <span class="home-action-menu-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
-            <!-- Documento -->
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            
-            <!-- Linee testo -->
-            <line x1="9" y1="11" x2="15" y2="11"></line>
-            <line x1="9" y1="15" x2="15" y2="15"></line>
-            
-            <!-- PDF badge rosso -->
-            <rect x="9" y="17" width="6" height="4" rx="0.5" fill="currentColor"></rect>
-            <text x="12" y="20.5" text-anchor="middle" font-size="2" font-weight="bold" fill="white">PDF</text>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="9" y1="13" x2="15" y2="13"/>
+            <line x1="9" y1="17" x2="15" y2="17"/>
           </svg>
         </span>
         <span class="home-action-menu-label">Genera Report PDF</span>
@@ -140,49 +186,6 @@ const homeView = {
           </button>
         </div>
 
-        <!-- AZIONI RAPIDE - Stile iPhone Dock -->
-        <div class="home-actions-dock">
-          <button class="home-action-dock-item" onclick="App.switchView('stats')" title="Statistiche">
-            <!-- GRAFICO ANALYTICS - ESATTO COME L'IMMAGINE -->
-            <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-              <!-- Trend line con 4 punti -->
-              <circle cx="15" cy="50" r="5"></circle>
-              <circle cx="40" cy="18" r="5"></circle>
-              <circle cx="60" cy="33" r="5"></circle>
-              <circle cx="85" cy="5" r="5"></circle>
-              <polyline points="15,50 40,18 60,33 85,5"></polyline>
-              
-              <!-- Bar chart - 4 barre con angoli arrotondati ALLINEATE -->
-              <rect x="10" y="65" width="12" height="15" rx="3" ry="3"></rect>
-              <rect x="32" y="55" width="12" height="25" rx="3" ry="3"></rect>
-              <rect x="54" y="42" width="12" height="38" rx="3" ry="3"></rect>
-              <rect x="76" y="28" width="12" height="52" rx="3" ry="3"></rect>
-            </svg>
-          </button>
-
-          <button class="home-action-dock-center" id="action-menu-btn">
-            <span class="home-action-plus">+</span>
-          </button>
-
-          <button class="home-action-dock-item" onclick="App.switchView('budget')" title="Budget">
-            <!-- BUDGET - MANO CON MONETE E FRECCIA SU - ALLINEATO -->
-            <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-              <!-- Freccia su (up arrow) -->
-              <path d="M 50 8 L 50 28"></path>
-              <polyline points="40 18 50 8 60 18"></polyline>
-              
-              <!-- Stack di monete (3 rettangoli arrotondati) - ALLINEATO -->
-              <rect x="55" y="32" width="35" height="10" rx="3" ry="3"></rect>
-              <rect x="55" y="45" width="35" height="10" rx="3" ry="3"></rect>
-              <rect x="55" y="58" width="35" height="10" rx="3" ry="3"></rect>
-              
-              <!-- Cerchio con $ al centro - ALLINEATO -->
-              <circle cx="35" cy="55" r="18" stroke-width="5"></circle>
-              <text x="35" y="61" text-anchor="middle" font-size="20" font-weight="bold" stroke="none" fill="currentColor">$</text>
-
-            </svg>
-          </button>
-        </div>
       </div>
     `;
   },
@@ -319,9 +322,17 @@ const homeView = {
     backdrop.className = 'fullscreen-backdrop show';
     document.body.insertBefore(backdrop, document.body.firstChild);
 
-    // Sfoca tutto lo schermo
+    // Sfoca solo il contenuto della pagina, NON il dock
     const app = document.getElementById('app');
     if (app) app.classList.add('blurred');
+
+    // Assicurati che il dock non venga mai sfocato
+    const dock = document.querySelector('.home-actions-dock');
+    if (dock) {
+      dock.style.filter = 'none';
+      dock.style.webkitFilter = 'none';
+      dock.style.zIndex = '110';
+    }
 
     backdrop.addEventListener('click', () => {
       const menu = document.getElementById('action-menu');
@@ -412,7 +423,14 @@ const homeView = {
     fill.className = 'budget-progress-fill' + (pct >= 100 ? ' danger' : pct >= 80 ? ' warning' : '');
   },
 
-  destroy() {}
+  destroy() {
+    // Rimuovi dock e menu dal modals-root quando si cambia vista
+    const dock = document.querySelector('.home-actions-dock');
+    if (dock) dock.remove();
+    const menu = document.getElementById('action-menu');
+    if (menu) menu.remove();
+    this.removeFullScreenBackdrop();
+  }
 };
 
 export default homeView;
