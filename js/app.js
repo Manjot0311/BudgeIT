@@ -25,11 +25,15 @@ class BudgeITApp {
     router.register('onboarding', onboardingView);
     router.register('reports',    reportsView);
 
-    const profiles = storage.getProfiles();
-    await router.navigate('onboarding', { mode: profiles.length ? 'login' : 'first' });
-
+    // Applica tema subito (prima della splash, evita flash)
     const theme = storage.getSetting('theme') || 'auto';
     this.applyTheme(theme);
+
+    // Mostra splash e aspetta almeno 1.8s
+    await this._showSplash(1800);
+
+    const profiles = storage.getProfiles();
+    await router.navigate('onboarding', { mode: profiles.length ? 'login' : 'first' });
 
     if ('serviceWorker' in navigator) {
       try {
@@ -39,6 +43,30 @@ class BudgeITApp {
         console.warn('Service worker registration failed', e);
       }
     }
+  }
+
+  /* ===================== SPLASH ===================== */
+
+  /**
+   * Mostra la splash screen per `duration` ms poi la dissolve e la rimuove.
+   * La splash è già nell'HTML — questo metodo la gestisce solo.
+   */
+  _showSplash(duration = 1800) {
+    return new Promise(resolve => {
+      const splash = document.getElementById('splash-screen');
+      if (!splash) { resolve(); return; }
+
+      setTimeout(() => {
+        splash.classList.add('splash-hide');
+        // Rimuovi dal DOM dopo la transizione CSS (500ms)
+        splash.addEventListener('transitionend', () => {
+          splash.remove();
+          resolve();
+        }, { once: true });
+        // Fallback se transitionend non scatta
+        setTimeout(() => { splash.remove(); resolve(); }, 600);
+      }, duration);
+    });
   }
 
   enterApp() {
@@ -242,8 +270,11 @@ class BudgeITApp {
 
   /**
    * Schermata PIN di accesso al profilo (tastierino numerico).
+   * Se il profilo ha la biometria registrata, mostra anche il bottone biometrico.
    */
-  _showPinLogin(profileId, profileName) {
+  async _showPinLogin(profileId, profileName) {
+    const hasBio = await this._biometricAvailable(profileId);
+
     const overlay = document.createElement('div');
     overlay.className = 'ios-picker-overlay';
     overlay.innerHTML = `
@@ -266,6 +297,11 @@ class BudgeITApp {
               <button class="pin-key" data-key="${k}">${k}</button>
             `).join('')}
           </div>
+          ${hasBio ? `
+          <button class="pin-biometric-btn bio-available" id="bio-btn">
+            <span class="bio-icon" id="bio-icon">${this._getBioIcon()}</span>
+            <span id="bio-label">${this._getBioLabel()}</span>
+          </button>` : ''}
         </div>
       </div>
     `;
@@ -293,7 +329,6 @@ class BudgeITApp {
                 overlay.remove();
                 this.loginProfile(profileId, pin);
               } else {
-                // Shake + reset
                 const dotsEl = overlay.querySelector('#pin-dots');
                 dotsEl.classList.add('pin-shake');
                 setTimeout(() => dotsEl.classList.remove('pin-shake'), 500);
@@ -312,6 +347,172 @@ class BudgeITApp {
     overlay.querySelector('#pin-cancel').addEventListener('click', () => {
       overlay.remove();
     });
+
+    // Bottone biometrico
+    const bioBtn = overlay.querySelector('#bio-btn');
+    if (bioBtn) {
+      // Tenta automaticamente all'apertura (solo se disponibile)
+      setTimeout(() => this._attemptBiometricLogin(profileId, overlay), 300);
+
+      bioBtn.addEventListener('click', () => {
+        this._attemptBiometricLogin(profileId, overlay);
+      });
+    }
+  }
+
+  /* ═══════════════════════════════════════════════
+     BIOMETRIA — WebAuthn
+  ════════════════════════════════════════════════ */
+
+  /** Ritorna true se WebAuthn è supportato dal browser */
+  _webAuthnSupported() {
+    return !!(window.PublicKeyCredential && navigator.credentials);
+  }
+
+  /** Icona adatta al dispositivo (Face ID su iOS, impronta altrove) */
+  _getBioIcon() {
+    const ua = navigator.userAgent.toLowerCase();
+    const isIOS = /iphone|ipad/.test(ua);
+    return isIOS ? '🔓' : '👁️';
+  }
+
+  _getBioLabel() {
+    const ua = navigator.userAgent.toLowerCase();
+    const isIOS = /iphone|ipad/.test(ua);
+    // Face ID su iPhone X+, Touch ID su iPad / iPhone older
+    if (isIOS) return 'Face ID / Touch ID';
+    return 'Sblocca con impronta';
+  }
+
+  /**
+   * Verifica se il profilo ha una credenziale biometrica registrata
+   * E se WebAuthn è disponibile su questo dispositivo.
+   */
+  async _biometricAvailable(profileId) {
+    if (!this._webAuthnSupported()) return false;
+    const credId = storage.getBiometricCredentialId(profileId);
+    if (!credId) return false;
+    try {
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      return available;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Registra la biometria per il profilo corrente.
+   * Chiamato dalle impostazioni dopo aver verificato il PIN.
+   */
+  async registerBiometric() {
+    if (!this._webAuthnSupported()) {
+      this.showAlert('Non supportato', 'Il tuo dispositivo non supporta la biometria.');
+      return;
+    }
+    const profile = storage.getActiveProfile();
+    if (!profile) return;
+
+    try {
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if (!available) {
+        this.showAlert('Non disponibile', 'Nessun autenticatore biometrico trovato su questo dispositivo.');
+        return;
+      }
+
+      // Challenge casuale (16 byte)
+      const challenge = crypto.getRandomValues(new Uint8Array(16));
+      const userId    = new TextEncoder().encode(profile.id);
+
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          challenge,
+          rp: { name: 'BudgeIT', id: location.hostname || 'localhost' },
+          user: {
+            id: userId,
+            name: profile.name,
+            displayName: profile.name
+          },
+          pubKeyCredParams: [
+            { type: 'public-key', alg: -7  },   // ES256
+            { type: 'public-key', alg: -257 }    // RS256 fallback
+          ],
+          authenticatorSelection: {
+            authenticatorAttachment: 'platform',
+            userVerification: 'required',
+            requireResidentKey: false
+          },
+          timeout: 60000
+        }
+      });
+
+      // Salva l'ID della credenziale (base64url)
+      const credId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+      storage.setBiometricCredentialId(profile.id, credId);
+
+      this.showToast('🔒 Biometria abilitata');
+      // Se le impostazioni sono aperte, aggiornale
+      this.UI.settingsModal?.refresh?.();
+
+    } catch (e) {
+      if (e.name === 'NotAllowedError') {
+        this.showToast('Biometria annullata');
+      } else {
+        console.error('WebAuthn register error:', e);
+        this.showAlert('Errore', 'Impossibile abilitare la biometria: ' + e.message);
+      }
+    }
+  }
+
+  /**
+   * Rimuovi biometria dal profilo corrente.
+   */
+  removeBiometric() {
+    const profile = storage.getActiveProfile();
+    if (!profile) return;
+    storage.removeBiometricCredentialId(profile.id);
+    this.showToast('Biometria disabilitata');
+    this.UI.settingsModal?.refresh?.();
+  }
+
+  /**
+   * Tenta il login biometrico per `profileId`.
+   * Se va a buon fine, chiude l'overlay e fa il login.
+   */
+  async _attemptBiometricLogin(profileId, overlay) {
+    const credId = storage.getBiometricCredentialId(profileId);
+    if (!credId) return;
+
+    const bioBtn   = overlay?.querySelector('#bio-btn');
+    const bioLabel = overlay?.querySelector('#bio-label');
+
+    try {
+      if (bioBtn)   bioBtn.classList.remove('bio-error');
+      if (bioLabel) bioLabel.textContent = 'In attesa…';
+
+      const rawId = Uint8Array.from(atob(credId), c => c.charCodeAt(0));
+      const challenge = crypto.getRandomValues(new Uint8Array(16));
+
+      await navigator.credentials.get({
+        publicKey: {
+          challenge,
+          allowCredentials: [{ type: 'public-key', id: rawId }],
+          userVerification: 'required',
+          timeout: 60000
+        }
+      });
+
+      // Autenticazione OK
+      overlay?.remove();
+      this.loginProfile(profileId);
+
+    } catch (e) {
+      if (bioBtn)   bioBtn.classList.add('bio-error');
+      if (bioLabel) bioLabel.textContent = 'Riprova o usa il PIN';
+      setTimeout(() => {
+        if (bioBtn)   bioBtn.classList.remove('bio-error');
+        if (bioLabel) bioLabel.textContent = this._getBioLabel();
+      }, 2500);
+    }
   }
 
   async loginProfile(profileId, pin = null) {

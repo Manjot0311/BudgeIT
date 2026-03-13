@@ -219,6 +219,32 @@ class StorageManager {
     return true;
   }
 
+  /* ===================== BIOMETRIA ===================== */
+
+  /**
+   * Salva l'ID della credenziale WebAuthn per un profilo.
+   * Memorizzato nel localStorage separato (non nei dati del profilo
+   * perché è device-specific e non va esportato/importato).
+   */
+  setBiometricCredentialId(profileId, credId) {
+    const key = `budgetit_bio_${profileId}`;
+    localStorage.setItem(key, credId);
+  }
+
+  getBiometricCredentialId(profileId) {
+    const key = `budgetit_bio_${profileId}`;
+    return localStorage.getItem(key) || null;
+  }
+
+  removeBiometricCredentialId(profileId) {
+    const key = `budgetit_bio_${profileId}`;
+    localStorage.removeItem(key);
+  }
+
+  hasBiometric(profileId) {
+    return !!this.getBiometricCredentialId(profileId);
+  }
+
   renameProfile(id, name) {
     const p = this.getProfile(id);
     if (!p) return;

@@ -45,6 +45,25 @@
 </head>
 
 <body>
+  <!-- ═══════════════════════════════════════════
+       SPLASH SCREEN
+       Rimane visibile ~1.8s poi si dissolve.
+       Viene rimosso dal DOM via JS dopo la transizione.
+  ════════════════════════════════════════════ -->
+  <div id="splash-screen" class="splash-screen">
+    <div class="splash-content">
+      <div class="splash-logo-wrap">
+        <img class="splash-icon" src="icons/icon-192.png" alt="BudgeIT">
+        <div class="splash-ripple"></div>
+      </div>
+      <div class="splash-name">BudgeIT</div>
+      <div class="splash-tagline">Le tue finanze, sempre con te</div>
+    </div>
+    <div class="splash-loader">
+      <div class="splash-loader-bar"></div>
+    </div>
+  </div>
+
   <div id="app" class="app-container"></div>
   <div id="modals-root"></div>
 
