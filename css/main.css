@@ -4761,7 +4761,8 @@ input[type="datetime-local"]::placeholder {
 .splash-screen {
     position: fixed;
     inset: 0;
-    background: #0B0B0B;
+    /* Segue automaticamente il tema del dispositivo */
+    background: #FAFAFA;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -4769,6 +4770,10 @@ input[type="datetime-local"]::placeholder {
     z-index: 9999;
     transition: opacity 0.5s ease, transform 0.5s ease;
     padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (prefers-color-scheme: dark) {
+    .splash-screen { background: #0B0B0B; }
 }
 
 .splash-screen.splash-hide {
@@ -4811,8 +4816,12 @@ input[type="datetime-local"]::placeholder {
     position: absolute;
     inset: -4px;
     border-radius: 26px;
-    border: 2px solid rgba(255,255,255,0.15);
+    border: 2px solid rgba(0,0,0,0.12);
     animation: splashRipple 1.6s ease-out 0.4s infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+    .splash-ripple { border-color: rgba(255,255,255,0.15); }
 }
 
 @keyframes splashRipple {
@@ -4824,7 +4833,7 @@ input[type="datetime-local"]::placeholder {
     font-family: 'Inter', sans-serif;
     font-size: 32px;
     font-weight: 700;
-    color: #FFFFFF;
+    color: #1A1A1A;
     letter-spacing: -0.5px;
     animation: splashFadeUp 0.5s ease 0.25s both;
 }
@@ -4833,8 +4842,13 @@ input[type="datetime-local"]::placeholder {
     font-family: 'Inter', sans-serif;
     font-size: 14px;
     font-weight: 400;
-    color: rgba(255,255,255,0.45);
+    color: rgba(0,0,0,0.45);
     animation: splashFadeUp 0.5s ease 0.4s both;
+}
+
+@media (prefers-color-scheme: dark) {
+    .splash-name    { color: #FFFFFF; }
+    .splash-tagline { color: rgba(255,255,255,0.45); }
 }
 
 @keyframes splashFadeUp {
@@ -4849,7 +4863,7 @@ input[type="datetime-local"]::placeholder {
     transform: translateX(-50%);
     width: 120px;
     height: 2px;
-    background: rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.1);
     border-radius: 2px;
     overflow: hidden;
 }
@@ -4857,9 +4871,14 @@ input[type="datetime-local"]::placeholder {
 .splash-loader-bar {
     height: 100%;
     width: 0%;
-    background: rgba(255,255,255,0.7);
+    background: rgba(0,0,0,0.5);
     border-radius: 2px;
     animation: splashLoad 1.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
+}
+
+@media (prefers-color-scheme: dark) {
+    .splash-loader     { background: rgba(255,255,255,0.1); }
+    .splash-loader-bar { background: rgba(255,255,255,0.7); }
 }
 
 @keyframes splashLoad {
@@ -4950,4 +4969,39 @@ input[type="datetime-local"]::placeholder {
 
 .settings-biometric-row .row-icon {
     font-size: 20px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   BIOMETRIC ROW in settings
+════════════════════════════════════════════════════════════ */
+.settings-bio-row {
+    cursor: default;
+    pointer-events: none;
+}
+
+.settings-bio-btn {
+    pointer-events: all;
+    background: transparent;
+    border: 1.5px solid var(--accent);
+    border-radius: 50px;
+    padding: 5px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.settings-bio-btn:active {
+    opacity: 0.6;
+    transform: scale(0.96);
+}
+
+.settings-bio-btn--remove {
+    border-color: var(--danger);
+    color: var(--danger);
 }

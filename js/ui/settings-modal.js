@@ -72,7 +72,7 @@ const settingsModal = {
         </div>
         <div class="settings-profile-card-info">
           <div class="settings-profile-card-name">${app.escapeHtml(activeProfile?.name || 'Profilo')}</div>
-          <div class="settings-profile-card-subtitle">Visualizza dettagli profilo</div>
+          <div class="settings-profile-card-subtitle">Rinomina profilo</div>
         </div>
         <button class="settings-profile-card-chevron" onclick="App.renameProfileUI(); App.UI.settingsModal.refresh();">›</button>
       </div>
@@ -144,6 +144,9 @@ const settingsModal = {
           <div class="settings-item-label">Modifica PIN</div>
           <span class="settings-item-chevron">›</span>
         </button>
+
+        <!-- Face ID / Touch ID / Impronta -->
+        ${this.getBiometricItemHTML()}
 
         <!-- Privacy e Sicurezza -->
         <button class="settings-item-with-icon settings-item-button" id="privacy-menu-btn" onclick="App.UI.settingsModal.openPrivacyMenu(event)">
@@ -294,6 +297,68 @@ const settingsModal = {
     if (dataMenu) dataMenu.classList.remove('show');
     if (privacyMenu) privacyMenu.classList.remove('show');
     if (backdrop) backdrop.classList.remove('show');
+  },
+
+  // ════════════════════════════════════════════════════════════
+  // BIOMETRIA
+  // ════════════════════════════════════════════════════════════
+
+  /**
+   * Rileva se siamo su iOS per mostrare "Face ID / Touch ID"
+   * oppure "Impronta digitale" su Android/desktop.
+   */
+  _getBioLabel() {
+    const ua = navigator.userAgent.toLowerCase();
+    return /iphone|ipad/.test(ua) ? 'Face ID / Touch ID' : 'Impronta digitale';
+  },
+
+  _getBioIcon() {
+    const ua = navigator.userAgent.toLowerCase();
+    if (/iphone|ipad/.test(ua)) {
+      // Volto stilizzato — Face ID
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+        <rect x="3" y="3" width="18" height="18" rx="5" ry="5"/>
+        <circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/>
+        <path d="M9 15c.8 1.2 2 1.8 3 1.8s2.2-.6 3-1.8" stroke-linecap="round"/>
+      </svg>`;
+    }
+    // Impronta — Android
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+      <path d="M12 10a2 2 0 0 0-2 2c0 1.5-.3 3-.9 4.3" stroke-linecap="round"/>
+      <path d="M12 10a2 2 0 0 1 2 2c0 2.8-.8 5.4-2.3 7.6" stroke-linecap="round"/>
+      <path d="M8.5 8.5A5 5 0 0 1 17 12c0 3.5-1 6.8-2.8 9.5" stroke-linecap="round"/>
+      <path d="M5.5 7A8 8 0 0 1 20 12c0 4.4-1.4 8.5-3.7 11.8" stroke-linecap="round"/>
+      <path d="M2.5 5.5A11.5 11.5 0 0 1 23 12c0 5-.5 8-2 11" stroke-linecap="round"/>
+    </svg>`;
+  },
+
+  /**
+   * Genera l'HTML dell'item biometria.
+   * Nascosto se WebAuthn non è supportato.
+   */
+  getBiometricItemHTML() {
+    if (!(window.PublicKeyCredential && navigator.credentials)) return '';
+
+    const profile = storage.getActiveProfile();
+    if (!profile) return '';
+
+    const hasBio   = storage.hasBiometric(profile.id);
+    const label    = this._getBioLabel();
+    const iconSvg  = this._getBioIcon();
+    const btnLabel = hasBio ? 'Rimuovi' : 'Abilita';
+    const btnClass = hasBio ? 'settings-bio-btn settings-bio-btn--remove' : 'settings-bio-btn';
+    const action   = hasBio
+      ? `App.removeBiometric(); App.UI.settingsModal.refresh();`
+      : `App.registerBiometric();`;
+
+    return `
+      <div class="settings-item-with-icon settings-bio-row">
+        <div class="settings-item-icon">${iconSvg}</div>
+        <div class="settings-item-label">${label}</div>
+        <button class="${btnClass}" onclick="${action}">${btnLabel}</button>
+      </div>
+    `;
   }
 };
 
