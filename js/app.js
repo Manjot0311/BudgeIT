@@ -501,9 +501,9 @@ class BudgeITApp {
         }
       });
 
-      // Autenticazione OK
+      // Autenticazione OK — bypass PIN perché WebAuthn ha già verificato l'identità
       overlay?.remove();
-      this.loginProfile(profileId);
+      this.loginProfile(profileId, null, true);
 
     } catch (e) {
       if (bioBtn)   bioBtn.classList.add('bio-error');
@@ -515,8 +515,9 @@ class BudgeITApp {
     }
   }
 
-  async loginProfile(profileId, pin = null) {
-    if (!(await storage.verifyPin(profileId, pin))) {
+  async loginProfile(profileId, pin = null, biometric = false) {
+    // Se login biometrico: la verifica è già avvenuta tramite WebAuthn, bypass PIN
+    if (!biometric && !(await storage.verifyPin(profileId, pin))) {
       this.showAlert('Errore', 'PIN non valido');
       return;
     }
